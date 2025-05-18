@@ -1,4 +1,4 @@
-package com.example.projectmdp.ui.module.login
+package com.example.projectmdp.ui.module.Login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
