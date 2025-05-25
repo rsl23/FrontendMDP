@@ -10,14 +10,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(
+open class LoginViewModel @Inject constructor(
     private val repository: AuthRepository
 ) : ViewModel() {
 
-    var email by mutableStateOf("")
+    open var email by mutableStateOf("")
         private set
 
-    var password by mutableStateOf("")
+    open var password by mutableStateOf("")
         private set
 
     var isLoading by mutableStateOf(false)
@@ -30,7 +30,7 @@ class LoginViewModel @Inject constructor(
         password = newPassword
     }
 
-    fun login() {
+    open fun login() {
         isLoading = true
         viewModelScope.launch {
             try {
