@@ -1,17 +1,19 @@
-package com.example.projectmdp.ui.module.login
+package com.example.projectmdp.ui.module.Login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 
 @Composable
-fun LoginScreen(viewModel: LoginViewModel = viewModel(),modifier: Modifier = Modifier) {
+fun LoginScreen(viewModel: LoginViewModel = hiltViewModel(), modifier: Modifier = Modifier) {
     val email = viewModel.email
     val password = viewModel.password
     Column(
@@ -46,3 +48,4 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(),modifier: Modifier = Mod
         }
     }
 }
+
