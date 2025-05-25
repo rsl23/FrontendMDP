@@ -4,9 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 import com.example.projectmdp.data.model.auth.RegisterDto
 import com.example.projectmdp.data.repository.AuthRepository
-import com.example.projectmdp.ui.module.Login.LoginScreen
 import com.example.projectmdp.ui.module.register.RegisterScreen
 import com.example.projectmdp.ui.module.register.RegisterViewModel
 
@@ -17,6 +17,6 @@ fun RegisterScreenPreview() {
     }
 
     MaterialTheme {
-        RegisterScreen(viewModel = previewViewModel)
+        RegisterScreen(viewModel = previewViewModel, navController = rememberNavController())
     }
 }

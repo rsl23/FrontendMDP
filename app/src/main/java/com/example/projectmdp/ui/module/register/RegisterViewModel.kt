@@ -56,4 +56,7 @@ open class RegisterViewModel @Inject constructor(
                }
            }
     }
+    fun registerWithGoogle(){
+
+    }
 }

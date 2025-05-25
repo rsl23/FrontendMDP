@@ -7,7 +7,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 object RetrofitInstance {
     private val retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://your-api-url.com/") // 🔁 Change this
+            .baseUrl("http://10.0.2.2:3000/") // 🔁 Change this
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
     }

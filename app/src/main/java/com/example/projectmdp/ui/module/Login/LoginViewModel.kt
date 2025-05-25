@@ -8,8 +8,9 @@ import androidx.compose.runtime.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.lifecycle.HiltViewModel
 
-class LoginViewModel : ViewModel() {
+open class LoginViewModel : ViewModel() {
 
     private lateinit var auth: FirebaseAuth
 
@@ -29,7 +30,7 @@ class LoginViewModel : ViewModel() {
         password = newPassword
     }
 
-    fun login() {
+    open fun login() {
         isLoading = true
         auth = Firebase.auth
         auth.signInWithEmailAndPassword(email, password)
@@ -42,5 +43,8 @@ class LoginViewModel : ViewModel() {
                     Log.e("Login Failed", "Login Failed");
                 }
             }
+    }
+    open fun loginWithGoogle() {
+
     }
 }

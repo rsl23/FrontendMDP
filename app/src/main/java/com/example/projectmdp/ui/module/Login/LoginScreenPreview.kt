@@ -4,10 +4,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 import com.example.projectmdp.data.model.auth.RegisterDto
 import com.example.projectmdp.data.repository.AuthRepository
-import com.example.projectmdp.ui.module.Login.LoginScreen
-import com.example.projectmdp.ui.module.Login.LoginViewModel
+import com.example.projectmdp.ui.module.login.LoginScreen
+import com.example.projectmdp.ui.module.login.LoginViewModel
+
 class DummyAuthRepository : AuthRepository() {
     override suspend fun login(email: String, password: String): String {
         return "dummy_token_for_preview"
@@ -21,13 +23,13 @@ class DummyAuthRepository : AuthRepository() {
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    val previewViewModel = object : LoginViewModel(DummyAuthRepository()) {
+    val previewViewModel = object : LoginViewModel() {
         override fun login() {
             // no-op for preview
         }
     }
 
     MaterialTheme {
-        LoginScreen(viewModel = previewViewModel)
+        LoginScreen(viewModel = previewViewModel, navController = rememberNavController())
     }
 }
