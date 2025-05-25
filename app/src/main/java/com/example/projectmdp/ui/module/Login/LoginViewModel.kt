@@ -1,23 +1,22 @@
-package com.example.projectmdp.ui.module.Login
+package com.example.projectmdp.ui.module.login
+
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 
 import androidx.compose.runtime.*
-import androidx.lifecycle.viewModelScope
-import com.example.projectmdp.data.repository.AuthRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
-import javax.inject.Inject
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
-@HiltViewModel
-open class LoginViewModel @Inject constructor(
-    private val repository: AuthRepository
-) : ViewModel() {
+class LoginViewModel : ViewModel() {
 
-    open var email by mutableStateOf("")
+    private lateinit var auth: FirebaseAuth
+
+    var email by mutableStateOf("")
         private set
 
-    open var password by mutableStateOf("")
+    var password by mutableStateOf("")
         private set
 
     var isLoading by mutableStateOf(false)
@@ -30,16 +29,18 @@ open class LoginViewModel @Inject constructor(
         password = newPassword
     }
 
-    open fun login() {
+    fun login() {
         isLoading = true
-        viewModelScope.launch {
-            try {
-                val response = repository.login(email, password)
-                Log.d("LoginViewModel", "Login response: $response")
-            } catch (e: Exception) {
-                Log.e("LoginViewModel", "Login error: ${e.message}", e)
+        auth = Firebase.auth
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                isLoading = false
+                if (task.isSuccessful) {
+                    //Kalau Login berhasil mau kemana
+                } else {
+                    //Kalau gagal
+                    Log.e("Login Failed", "Login Failed");
+                }
             }
-        }
-        isLoading = false
     }
 }

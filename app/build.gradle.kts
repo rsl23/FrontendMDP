@@ -2,8 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.dagger.hilt.android")
+
     kotlin("kapt")
-    alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.gms.google.services)
 }
 
@@ -58,7 +59,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("androidx.activity:activity-compose:1.9.0")
-    implementation(libs.firebase.auth)
 
     // Coil for image loading in Compose
     implementation("io.coil-kt:coil-compose:2.4.0")
@@ -68,6 +68,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
     implementation("com.squareup.moshi:moshi:1.15.2")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
+    implementation(libs.firebase.auth)
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.2")
 
     // Testing
