@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     kotlin("kapt")
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -57,6 +58,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("androidx.activity:activity-compose:1.9.0")
+    implementation(libs.firebase.auth)
 
     // Coil for image loading in Compose
     implementation("io.coil-kt:coil-compose:2.4.0")
