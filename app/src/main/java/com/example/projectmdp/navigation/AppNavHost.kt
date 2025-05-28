@@ -5,19 +5,30 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.projectmdp.data.repository.AuthRepository
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.projectmdp.ui.module.login.LoginScreen
-import com.example.projectmdp.ui.module.login.LoginViewModel
 import com.example.projectmdp.ui.module.register.RegisterScreen
-import com.example.projectmdp.ui.module.register.RegisterViewModel
+
 @Composable
-fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier){
-    NavHost(navController = navController, startDestination = Routes.LOGIN) {
+fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+    NavHost(
+        navController = navController,
+        startDestination = Routes.LOGIN,
+        modifier = modifier
+    ) {
         composable(Routes.LOGIN) {
-            LoginScreen(LoginViewModel(), modifier ,navController)
+            // Using hiltViewModel() to properly inject dependencies
+            LoginScreen(
+                viewModel = hiltViewModel(),
+                navController = navController
+            )
         }
         composable(Routes.REGISTER) {
-            RegisterScreen(RegisterViewModel(AuthRepository()), modifier ,navController)
+            // Using hiltViewModel() to properly inject dependencies
+            RegisterScreen(
+                viewModel = hiltViewModel(),
+                navController = navController
+            )
         }
     }
 }

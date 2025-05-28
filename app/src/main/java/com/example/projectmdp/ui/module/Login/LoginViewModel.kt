@@ -1,50 +1,49 @@
 package com.example.projectmdp.ui.module.login
 
 import android.util.Log
-import android.widget.Toast
-import androidx.lifecycle.ViewModel
-
 import androidx.compose.runtime.*
+import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-open class LoginViewModel : ViewModel() {
-
-    private lateinit var auth: FirebaseAuth
-
+@HiltViewModel
+class LoginViewModel @Inject constructor() : ViewModel() {
     var email by mutableStateOf("")
         private set
-
     var password by mutableStateOf("")
         private set
-
     var isLoading by mutableStateOf(false)
         private set
-    fun onEmailChange(newEmail: String) {
-        email = newEmail
-    }
 
-    fun onPasswordChange(newPassword: String) {
-        password = newPassword
-    }
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    open fun login() {
+    fun onEmailChange(newEmail: String) { email = newEmail }
+    fun onPasswordChange(newPassword: String) { password = newPassword }
+
+    fun login() {
         isLoading = true
-        auth = Firebase.auth
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 isLoading = false
                 if (task.isSuccessful) {
-                    //Kalau Login berhasil mau kemana
+                    Log.d("Login", "Success")
                 } else {
-                    //Kalau gagal
-                    Log.e("Login Failed", "Login Failed");
+                    Log.e("Login", "Failed: ${task.exception?.message}")
                 }
             }
     }
-    open fun loginWithGoogle() {
 
+    fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("GoogleLogin", "Success")
+                } else {
+                    Log.e("GoogleLogin", "Failed: ${task.exception?.message}")
+                }
+            }
     }
 }
