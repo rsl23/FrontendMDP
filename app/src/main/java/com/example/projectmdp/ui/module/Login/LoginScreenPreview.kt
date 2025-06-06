@@ -12,15 +12,15 @@ fun PreviewLoginScreen(
     navController: androidx.navigation.NavController
 ) {
     // This is essentially the same as LoginScreen but using our PreviewLoginViewModel
-    LoginScreenContent(
-        email = viewModel.email,
-        password = viewModel.password,
-        onEmailChange = viewModel::onEmailChange,
-        onPasswordChange = viewModel::onPasswordChange,
-        onLogin = viewModel::login,
-        onGoogleSignIn = viewModel::firebaseAuthWithGoogle,
-        navController = navController
-    )
+//    LoginScreenContent(
+//        email = viewModel.email,
+//        password = viewModel.password,
+//        onEmailChange = viewModel::onEmailChange,
+//        onPasswordChange = viewModel::onPasswordChange,
+//        onLogin = viewModel::login,
+//        onGoogleSignIn = viewModel::firebaseAuthWithGoogle,
+//        navController = navController
+//    )
 }
 
 // Preview ViewModel implementation remains the same

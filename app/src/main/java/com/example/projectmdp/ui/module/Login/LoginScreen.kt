@@ -170,3 +170,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
         }
     }
 }
+
+private fun LoginViewModel.loginWithGoogle() {
+    TODO("Not yet implemented")
+}

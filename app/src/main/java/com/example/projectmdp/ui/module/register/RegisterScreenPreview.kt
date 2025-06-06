@@ -12,21 +12,21 @@ fun PreviewRegisterScreen(
     navController: androidx.navigation.NavController
 ) {
     // This is essentially the same as RegisterScreen but using our PreviewRegisterViewModel
-    RegisterScreenContent(
-        email = viewModel.email,
-        password = viewModel.password,
-        confirmPassword = viewModel.confirmPassword,
-        address = viewModel.address,
-        phoneNumber = viewModel.phoneNumber,
-        onEmailChange = viewModel::onEmailChange,
-        onPasswordChange = viewModel::onPasswordChange,
-        onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
-        onAddressChange = viewModel::onAddressChange,
-        onPhoneNumberChange = viewModel::onPhoneNumberChange,
-        onRegister = viewModel::register,
-        onGoogleSignIn = viewModel::firebaseAuthWithGoogle,
-        navController = navController
-    )
+//    RegisterScreenContent(
+//        email = viewModel.email,
+//        password = viewModel.password,
+//        confirmPassword = viewModel.confirmPassword,
+//        address = viewModel.address,
+//        phoneNumber = viewModel.phoneNumber,
+//        onEmailChange = viewModel::onEmailChange,
+//        onPasswordChange = viewModel::onPasswordChange,
+//        onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
+//        onAddressChange = viewModel::onAddressChange,
+//        onPhoneNumberChange = viewModel::onPhoneNumberChange,
+//        onRegister = viewModel::register,
+//        onGoogleSignIn = viewModel::firebaseAuthWithGoogle,
+//        navController = navController
+//    )
 }
 
 // Preview ViewModel implementation remains the same

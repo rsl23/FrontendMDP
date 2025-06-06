@@ -214,3 +214,7 @@ fun RegisterScreen(
         }
     }
 }
+
+private fun RegisterViewModel.registerWithGoogle() {
+    TODO("Not yet implemented")
+}
