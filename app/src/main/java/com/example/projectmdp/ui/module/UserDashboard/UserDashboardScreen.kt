@@ -77,7 +77,7 @@ fun UserDashboardScreen(
                     ProductCard(
                         product = product,
                         onBuyClick = { viewModel.buyProduct(product) },
-                        onChatClick = { viewModel.chatWithSeller(product.sellerId) }
+                        onChatClick = { viewModel.chatWithSeller(product.user) }
                     )
                 }
             }
@@ -176,7 +176,7 @@ private fun ProductCard(
         ) {
             // Product Image
             AsyncImage(
-                model = product.imageUrl,
+                model = product.image,
                 contentDescription = product.name,
                 modifier = Modifier
                     .size(120.dp)

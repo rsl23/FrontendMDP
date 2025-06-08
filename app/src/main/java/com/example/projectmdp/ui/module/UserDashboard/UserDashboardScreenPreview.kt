@@ -6,6 +6,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.projectmdp.data.model.product.Product
+import com.google.firebase.Timestamp
 
 // Preview ViewModel implementation
 class PreviewUserDashboardViewModel : UserDashboardViewModel() {
@@ -18,59 +19,56 @@ class PreviewUserDashboardViewModel : UserDashboardViewModel() {
     private fun loadSampleData() {
         products = listOf(
             Product(
-                id = "1",
-                name = "iPhone 12 Pro Max - Excellent Condition",
+                product_id = "1",
+                name = "iPhone 12 Pro",
                 price = "8,500,000",
-                imageUrl = "https://via.placeholder.com/300x300/4285F4/FFFFFF?text=iPhone+12+Pro",
-                sellerId = "seller1",
+                description = "Good condition iPhone 12 Pro",
+                image = "https://via.placeholder.com/300x300?text=iPhone+12+Pro",
+                user = "US001",
+                created_at = Timestamp.now(),
+                updated_at = Timestamp.now(),
+                deleted_at = null,
                 sellerName = "John Doe",
-                sellerLocation = "Surabaya, East Java",
-                category = "smartphones",
-                description = "Good condition iPhone 12 Pro with original charger"
+                sellerLocation = "Surabaya, East Java"
             ),
             Product(
-                id = "2",
-                name = "Samsung Galaxy S21 Ultra",
+                product_id = "2",
+                name = "Samsung Galaxy S21",
                 price = "7,200,000",
-                imageUrl = "https://via.placeholder.com/300x300/34A853/FFFFFF?text=Galaxy+S21",
-                sellerId = "seller2",
+                description = "Excellent condition Samsung Galaxy S21",
+                image = "https://via.placeholder.com/300x300?text=Galaxy+S21",
+                user = "US001",
+                created_at = Timestamp.now(),
+                updated_at = Timestamp.now(),
+                deleted_at = null,
                 sellerName = "Jane Smith",
-                sellerLocation = "Jakarta, DKI Jakarta",
-                category = "smartphones",
-                description = "Excellent condition Samsung Galaxy S21 with S Pen"
+                sellerLocation = "Jakarta, DKI Jakarta"
             ),
             Product(
-                id = "3",
-                name = "MacBook Air M1 2020",
+                product_id = "3",
+                name = "MacBook Air M1",
                 price = "12,000,000",
-                imageUrl = "https://via.placeholder.com/300x300/EA4335/FFFFFF?text=MacBook+Air",
-                sellerId = "seller3",
+                description = "Like new MacBook Air with M1 chip",
+                image = "https://via.placeholder.com/300x300?text=MacBook+Air",
+                user = "US002",
+                created_at = Timestamp.now(),
+                updated_at = Timestamp.now(),
+                deleted_at = null,
                 sellerName = "Bob Wilson",
-                sellerLocation = "Bandung, West Java",
-                category = "laptops",
-                description = "Like new MacBook Air with M1 chip, 8GB RAM, 256GB SSD"
+                sellerLocation = "Bandung, West Java"
             ),
             Product(
-                id = "4",
-                name = "iPad Pro 11\" 2021 with Apple Pencil",
+                product_id = "4",
+                name = "iPad Pro 11\"",
                 price = "9,800,000",
-                imageUrl = "https://via.placeholder.com/300x300/FBBC05/FFFFFF?text=iPad+Pro",
-                sellerId = "seller4",
+                description = "iPad Pro 11 inch with Apple Pencil",
+                image = "https://via.placeholder.com/300x300?text=iPad+Pro",
+                user = "US002",
+                created_at = Timestamp.now(),
+                updated_at = Timestamp.now(),
+                deleted_at = null,
                 sellerName = "Alice Brown",
-                sellerLocation = "Medan, North Sumatra",
-                category = "tablets",
-                description = "iPad Pro 11 inch with Apple Pencil and Smart Keyboard"
-            ),
-            Product(
-                id = "5",
-                name = "Dell XPS 13 Laptop",
-                price = "10,500,000",
-                imageUrl = "https://via.placeholder.com/300x300/9C27B0/FFFFFF?text=Dell+XPS",
-                sellerId = "seller5",
-                sellerName = "Charlie Davis",
-                sellerLocation = "Yogyakarta, DI Yogyakarta",
-                category = "laptops",
-                description = "Dell XPS 13 with Intel i7, 16GB RAM, 512GB SSD"
+                sellerLocation = "Medan, North Sumatra"
             )
         )
         userInitials = "JD"
