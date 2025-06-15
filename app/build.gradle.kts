@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.dagger.hilt.android")
-
+    id("kotlin-parcelize")
     kotlin("kapt")
     alias(libs.plugins.google.gms.google.services)
 }
@@ -62,6 +62,10 @@ dependencies {
 
     // Coil for image loading in Compose
     implementation("io.coil-kt:coil-compose:2.4.0")
+
+    //RoomDB
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
 
     // Retrofit with Moshi
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
