@@ -13,4 +13,6 @@ open class AuthRepository @Inject constructor() {
     open suspend fun register(registerDto: RegisterDto): String {
         return RetrofitInstance.Authapi.register(registerDto)
     }
+
+    open suspend fun profileUser()
 }
