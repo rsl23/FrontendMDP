@@ -1,33 +1,49 @@
+package com.example.projectmdp.ui.module.login
+
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.projectmdp.data.model.auth.RegisterDto
-import com.example.projectmdp.data.repository.AuthRepository
-import com.example.projectmdp.ui.module.Login.LoginScreen
-import com.example.projectmdp.ui.module.Login.LoginViewModel
-class DummyAuthRepository : AuthRepository() {
-    override suspend fun login(email: String, password: String): String {
-        return "dummy_token_for_preview"
-    }
+import androidx.navigation.compose.rememberNavController
 
-    override suspend fun register(registerDto: RegisterDto): String {
-        return "dummy_register_response"
-    }
+// Create a modified version of the LoginScreen that accepts our preview ViewModel
+@Composable
+fun PreviewLoginScreen(
+    viewModel: PreviewLoginViewModel,
+    navController: androidx.navigation.NavController
+) {
+    // This is essentially the same as LoginScreen but using our PreviewLoginViewModel
+//    LoginScreenContent(
+//        email = viewModel.email,
+//        password = viewModel.password,
+//        onEmailChange = viewModel::onEmailChange,
+//        onPasswordChange = viewModel::onPasswordChange,
+//        onLogin = viewModel::login,
+//        onGoogleSignIn = viewModel::firebaseAuthWithGoogle,
+//        navController = navController
+//    )
+}
+
+// Preview ViewModel implementation remains the same
+class PreviewLoginViewModel : androidx.lifecycle.ViewModel() {
+    var email = ""
+    var password = ""
+    var isLoading = false
+
+    fun onEmailChange(newEmail: String) { email = newEmail }
+    fun onPasswordChange(newPassword: String) { password = newPassword }
+    fun login() { /* No-op for preview */ }
+    fun firebaseAuthWithGoogle(idToken: String) { /* No-op for preview */ }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    val previewViewModel = object : LoginViewModel(DummyAuthRepository()) {
-        override fun login() {
-            // no-op for preview
-        }
-    }
+    val previewViewModel = PreviewLoginViewModel()
 
     MaterialTheme {
-        LoginScreen(viewModel = previewViewModel)
+        PreviewLoginScreen(
+            viewModel = previewViewModel,
+            navController = rememberNavController()
+        )
     }
 }

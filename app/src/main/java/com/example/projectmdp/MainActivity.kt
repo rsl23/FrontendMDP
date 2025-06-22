@@ -11,7 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.projectmdp.ui.module.Login.LoginScreen
+import androidx.navigation.compose.rememberNavController
+import com.example.projectmdp.navigation.AppNavHost
 import com.example.projectmdp.ui.module.register.RegisterScreen
 import com.example.projectmdp.ui.theme.ProjectMDPTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,13 +24,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ProjectMDPTheme {
+                val navController = rememberNavController()
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    LoginScreen(
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-                    RegisterScreen(
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    AppNavHost(navController = navController, modifier = Modifier.padding(innerPadding))
                 }
             }
         }
