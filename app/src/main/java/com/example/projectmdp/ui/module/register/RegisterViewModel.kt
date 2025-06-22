@@ -3,13 +3,19 @@ package com.example.projectmdp.ui.module.register
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.projectmdp.data.model.auth.RegisterDto
+import com.example.projectmdp.data.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RegisterViewModel @Inject constructor() : ViewModel() {
+class RegisterViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
     var email by mutableStateOf("")
         private set
     var password by mutableStateOf("")
@@ -39,11 +45,30 @@ class RegisterViewModel @Inject constructor() : ViewModel() {
         isLoading = true
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
-                isLoading = false
                 if (task.isSuccessful) {
                     Log.d("Register", "Success")
+                    // Call backend register
+                    viewModelScope.launch {
+                        try {
+                            val registerDto = RegisterDto(
+                                username = email.substringBefore("@"),
+                                email = email,
+                                password = password,
+                                address = address,
+                                phone_number = phoneNumber,
+                                role = "user"
+                            )
+                            val response = authRepository.register(registerDto)
+                            Log.d("BackendRegister", "Success: $response")
+                        } catch (e: Exception) {
+                            Log.e("BackendRegister", "Failed: ${e.message}")
+                        } finally {
+                            isLoading = false
+                        }
+                    }
                 } else {
                     Log.e("Register", "Failed: ${task.exception?.message}")
+                    isLoading = false
                 }
             }
     }
@@ -60,3 +85,4 @@ class RegisterViewModel @Inject constructor() : ViewModel() {
             }
     }
 }
+

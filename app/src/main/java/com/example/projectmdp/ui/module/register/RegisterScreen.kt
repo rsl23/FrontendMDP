@@ -64,7 +64,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { viewModel.onEmailChange(it) },
+                onValueChange = { viewModel.email = it },
                 label = { Text("Email") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -81,7 +81,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { viewModel.onPasswordChange(it) },
+                onValueChange = { viewModel.password = it },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
@@ -99,7 +99,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = confirmPassword,
-                onValueChange = { viewModel.onConfirmPasswordChange(it) },
+                onValueChange = { viewModel.confirmPassword = it },
                 label = { Text("Confirm Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
@@ -117,7 +117,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = address,
-                onValueChange = { viewModel.onAddressChange(it) },
+                onValueChange = { viewModel.address = it },
                 label = { Text("Address") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,7 +133,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = { viewModel.onPhoneNumberChange(it) },
+                onValueChange = { viewModel.phoneNumber = it },
                 label = { Text("Phone Number") },
                 modifier = Modifier
                     .fillMaxWidth()

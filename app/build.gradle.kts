@@ -63,7 +63,7 @@ dependencies {
     // Coil for image loading in Compose
     implementation("io.coil-kt:coil-compose:2.4.0")
 
-    //RoomDB
+    // RoomDB
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
 
@@ -84,16 +84,39 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-// Hilt core
+    // Hilt core
     implementation("com.google.dagger:hilt-android:2.50")
     kapt("com.google.dagger:hilt-compiler:2.50")
 
-// Hilt for ViewModel (Compose)
+    // Hilt for ViewModel (Compose)
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
-    implementation ("com.google.firebase:firebase-auth-ktx:22.3.1")
-    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0")) // Firebase BoM
 
-    implementation ("com.google.firebase:firebase-firestore-ktx:24.10.0")
+    // Firebase dependencies (no need for versions when using BoM)
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Play Services Auth (make sure version is compatible with Firebase BoM)
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+
+    // compose jetpack
+    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+
+    // Other Compose dependencies
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.compose.material3:material3:1.2.0")
+    implementation("androidx.compose.material3:material3-window-size-class:1.2.0")
+    implementation("androidx.compose.material3:material3-icons-extended:1.2.0")
+    implementation("androidx.compose.material3:material3-icons-core:1.2.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.5.3")
 }

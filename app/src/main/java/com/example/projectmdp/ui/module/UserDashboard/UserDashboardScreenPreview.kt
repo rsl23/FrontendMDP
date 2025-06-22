@@ -73,6 +73,10 @@ class PreviewUserDashboardViewModel : UserDashboardViewModel() {
         )
         userInitials = "JD"
     }
+
+    fun setLoadingState(loading: Boolean) {
+        isLoading = loading
+    }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -91,9 +95,8 @@ fun UserDashboardScreenPreview() {
 @Preview(showBackground = true, name = "Loading State")
 @Composable
 fun UserDashboardScreenLoadingPreview() {
-    val previewViewModel = PreviewUserDashboardViewModel().apply {
-        isLoading = true
-    }
+    val previewViewModel = PreviewUserDashboardViewModel()
+    previewViewModel.setLoadingState(true) // Use the public method instead of direct assignment
 
     MaterialTheme {
         UserDashboardScreen(
@@ -102,4 +105,3 @@ fun UserDashboardScreenLoadingPreview() {
         )
     }
 }
-

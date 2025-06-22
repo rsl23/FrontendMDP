@@ -1,5 +1,13 @@
 package com.example.projectmdp.ui.module.login
 
+import android.app.Activity
+import android.content.IntentSender
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.auth.api.identity.Identity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,11 +16,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
+import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -56,11 +67,11 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
             OutlinedTextField(
                 value = email,
                 onValueChange = { viewModel.onEmailChange(it) },
-                label = { Text("Email") },
+                label = @Composable { Text("Email") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                leadingIcon = {
+                leadingIcon = @Composable {
                     Icon(
                         imageVector = Icons.Default.Email,
                         contentDescription = "Email"
@@ -73,12 +84,12 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
             OutlinedTextField(
                 value = password,
                 onValueChange = { viewModel.onPasswordChange(it) },
-                label = { Text("Password") },
+                label = @Composable { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
-                leadingIcon = {
+                leadingIcon = @Composable {
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = "Password"
@@ -130,8 +141,41 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            val context = LocalContext.current
+            val activity = context as Activity
+            val webClientId = "YOUR_WEB_CLIENT_ID" // replace with actual Web Client ID from Firebase
+
+            val oneTapClient = remember { Identity.getSignInClient(context) }
+            val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
+                    val idToken = credential.googleIdToken
+                    if (idToken != null) {
+                        viewModel.firebaseAuthWithGoogleIdToken(idToken)
+                    } else {
+                        Log.e("OneTap", "No ID token!")
+                    }
+                } else {
+                    Log.e("OneTap", "Sign-in failed or canceled")
+                }
+            }
+
             OutlinedButton(
-                onClick = { viewModel.loginWithGoogle() },
+                onClick = {
+                    val signInRequest = viewModel.buildOneTapSignInRequest(webClientId)
+                    oneTapClient.beginSignIn(signInRequest)
+                        .addOnSuccessListener { result ->
+                            try {
+                                val intentSenderRequest = IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
+                                launcher.launch(intentSenderRequest)
+                            } catch (e: IntentSender.SendIntentException) {
+                                Log.e("OneTap", "Couldn't start One Tap UI: ${e.localizedMessage}")
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("OneTap", "One Tap Sign-in failed: ${e.localizedMessage}")
+                        }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -145,6 +189,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
                     style = MaterialTheme.typography.titleMedium
                 )
             }
+
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -172,5 +217,5 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
 }
 
 private fun LoginViewModel.loginWithGoogle() {
-    TODO("Not yet implemented")
+    Log.d("GoogleLogin", "Google login initiated")
 }

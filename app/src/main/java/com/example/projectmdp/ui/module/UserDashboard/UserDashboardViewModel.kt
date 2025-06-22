@@ -23,7 +23,7 @@ open class UserDashboardViewModel @Inject constructor() : ViewModel() {
     open var products by mutableStateOf<List<Product>>(emptyList())
         protected set
 
-    open var isLoading by mutableStateOf(false)
+    var isLoading by mutableStateOf(false)
         protected set
 
     open var userInitials by mutableStateOf("U")
