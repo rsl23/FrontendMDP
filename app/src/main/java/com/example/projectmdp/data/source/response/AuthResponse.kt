@@ -7,3 +7,9 @@ data class AuthResponse(
     val message: String,
     val token: String,
 )
+
+data class VerifyResponse(
+    val status: Int,
+    val message: String,
+    val user: LoginDto
+)
