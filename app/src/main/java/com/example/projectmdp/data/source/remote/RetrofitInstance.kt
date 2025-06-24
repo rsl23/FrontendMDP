@@ -3,6 +3,7 @@ package com.example.projectmdp.data.source.remote
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 
@@ -34,7 +35,7 @@ object RetrofitInstance {
         Retrofit.Builder()
             .baseUrl("http://10.0.2.2:3000/")
             .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 

@@ -15,7 +15,11 @@ interface AuthApi {
 //    @POST("/signup")
 //    suspend fun register(@Body registerDto: RegisterDto): String
     @GET("/logout")
-    suspend fun logout(@Header("Authorization") authHeader: String)
+    suspend fun logout()
     @POST("/verify-token")
-    suspend fun verifyToken(@Body token: String): VerifyResponse
+    suspend fun verifyToken(@Body request: VerifyTokenRequest): VerifyResponse
 }
+
+data class VerifyTokenRequest(
+    val token: String
+)

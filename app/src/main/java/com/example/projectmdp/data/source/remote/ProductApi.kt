@@ -14,16 +14,16 @@ import retrofit2.http.Path
 
 interface ProductApi {
     @POST("/add-product")
-    suspend fun addProduct (@Body productDTO: ProductDto, @Header("authorization") authHeader: String ): ProductResponse
+    suspend fun addProduct (@Body productDTO: ProductDto): ProductResponse
 
     @GET("/products")
     suspend fun getAllProduct(): GetAllProduct
     @GET("/product/{id}")
     suspend fun getProductById( @Path("id") id: String) : GetProduct
     @PUT("/product/{id}")
-    suspend fun updateProduct(@Path("id") id: String, @Header("authorization") authHeader: String): GetProduct
+    suspend fun updateProduct(@Path("id") id: String): GetProduct
     @DELETE("/product/{id}")
-    suspend fun deleteProduct(@Path("id") id: String, @Header("authorization") authHeader: String): ProductResponse
+    suspend fun deleteProduct(@Path("id") id: String): ProductResponse
     @GET("/product/search/{name}")
     suspend fun getProductByName (@Path("name") name:String) : GetProduct
 
