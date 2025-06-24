@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.dagger.hilt.android")
     id("kotlin-parcelize")
+
     kotlin("kapt")
     alias(libs.plugins.google.gms.google.services)
 }
@@ -50,7 +51,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
@@ -62,10 +62,6 @@ dependencies {
 
     // Coil for image loading in Compose
     implementation("io.coil-kt:coil-compose:2.4.0")
-
-    // RoomDB
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
 
     // Retrofit with Moshi
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
@@ -84,18 +80,20 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    // Hilt core
+// Hilt core
     implementation("com.google.dagger:hilt-android:2.50")
     kapt("com.google.dagger:hilt-compiler:2.50")
 
-    // Hilt for ViewModel (Compose)
+// Hilt for ViewModel (Compose)
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
-    implementation(platform("com.google.firebase:firebase-bom:33.15.0")) // Firebase BoM
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.firebase:firebase-auth-ktx")
 
     // Firebase dependencies (no need for versions when using BoM)
-    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
 
     // Play Services Auth (make sure version is compatible with Firebase BoM)
@@ -113,10 +111,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.compose.material3:material3:1.2.0")
     implementation("androidx.compose.material3:material3-window-size-class:1.2.0")
-    implementation("androidx.compose.material3:material3-icons-extended:1.2.0")
-    implementation("androidx.compose.material3:material3-icons-core:1.2.0")
+    implementation("androidx.compose.material:material-icons-core:1.6.2")
+    implementation("androidx.compose.material:material-icons-extended:1.6.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.3")
 }

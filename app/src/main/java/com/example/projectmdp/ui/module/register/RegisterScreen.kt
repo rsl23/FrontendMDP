@@ -1,5 +1,14 @@
 package com.example.projectmdp.ui.module.register
 
+import android.app.Activity
+import android.content.IntentSender
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import com.google.android.gms.auth.api.identity.Identity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,8 +22,10 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -64,7 +75,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { viewModel.email = it },
+                onValueChange = { viewModel.onEmailChange(it) },
                 label = { Text("Email") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -81,7 +92,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { viewModel.password = it },
+                onValueChange = { viewModel.onPasswordChange(it) },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
@@ -99,7 +110,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = confirmPassword,
-                onValueChange = { viewModel.confirmPassword = it },
+                onValueChange = { viewModel.onConfirmPasswordChange(it) },
                 label = { Text("Confirm Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
@@ -117,7 +128,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = address,
-                onValueChange = { viewModel.address = it },
+                onValueChange = { viewModel.onAddressChange(it) },
                 label = { Text("Address") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,7 +144,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = { viewModel.phoneNumber = it },
+                onValueChange = { viewModel.onPhoneNumberChange(it) },
                 label = { Text("Phone Number") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -174,8 +185,59 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            val context = LocalContext.current
+            val activity = context as Activity
+            val webClientId = "114051112134470433010"
+
+            val oneTapClient = remember { Identity.getSignInClient(context) }
+            val launcher = rememberLauncherForActivityResult(
+                ActivityResultContracts.StartIntentSenderForResult()
+            ) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
+                    val idToken = credential.googleIdToken
+                    if (idToken != null) {
+                        // Call the existing firebaseAuthWithGoogle method
+                        viewModel.firebaseAuthWithGoogle(idToken)
+
+                        // Extract user info for registration
+                        val email = credential.id
+                        // If address and phone are required, show a dialog to collect them
+                        viewModel.onEmailChange(email)
+                    } else {
+                        Log.e("OneTap", "No ID token!")
+                    }
+                } else {
+                    Log.e("OneTap", "Sign-in failed or canceled")
+                }
+            }
+
             OutlinedButton(
-                onClick = { viewModel.registerWithGoogle() },
+                onClick = {
+                    val signInRequest = BeginSignInRequest.builder()
+                        .setGoogleIdTokenRequestOptions(
+                            BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+                                .setSupported(true)
+                                .setServerClientId(webClientId)
+                                .setFilterByAuthorizedAccounts(false)
+                                .build()
+                        )
+                        .setAutoSelectEnabled(true)
+                        .build()
+
+                    oneTapClient.beginSignIn(signInRequest)
+                        .addOnSuccessListener { result ->
+                            try {
+                                val intentSenderRequest = IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
+                                launcher.launch(intentSenderRequest)
+                            } catch (e: IntentSender.SendIntentException) {
+                                Log.e("OneTap", "Couldn't start One Tap UI: ${e.localizedMessage}")
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("OneTap", "One Tap Sign-in failed: ${e.localizedMessage}")
+                        }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -216,5 +278,5 @@ fun RegisterScreen(
 }
 
 private fun RegisterViewModel.registerWithGoogle() {
-    TODO("Not yet implemented")
+    Log.d("GoogleRegister", "Google registration initiated")
 }
