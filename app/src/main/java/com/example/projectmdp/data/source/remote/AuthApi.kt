@@ -12,8 +12,8 @@ import retrofit2.http.Header
 interface AuthApi {
     @POST("/login")
     suspend fun login( @Body request: LoginRequest): AuthResponse
-    @POST("/signup")
-    suspend fun register(@Body registerDto: RegisterDto): String
+//    @POST("/signup")
+//    suspend fun register(@Body registerDto: RegisterDto): String
     @GET("/logout")
     suspend fun logout(@Header("Authorization") authHeader: String)
     @POST("/verify-token")

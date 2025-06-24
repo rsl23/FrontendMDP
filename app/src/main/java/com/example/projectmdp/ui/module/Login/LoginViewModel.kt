@@ -47,7 +47,7 @@ class LoginViewModel @Inject constructor(
                             // Call backend login
                             viewModelScope.launch {
                                 try {
-                                    val response = authRepository.login(email, password)
+                                    val response = authRepository.verifyToken(idToken)
                                     Log.d("BackendLogin", "Success: $response")
                                 } catch (e: Exception) {
                                     Log.e("BackendLogin", "Failed: ${e.message}")
