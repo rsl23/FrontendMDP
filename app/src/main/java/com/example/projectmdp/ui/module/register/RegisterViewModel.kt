@@ -16,19 +16,12 @@ import javax.inject.Inject
 class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
-    var email by mutableStateOf("")
-        private set
-    var password by mutableStateOf("")
-        private set
-    var confirmPassword by mutableStateOf("")
-        private set
-    var address by mutableStateOf("")
-        private set
-    var phoneNumber by mutableStateOf("")
-        private set
-    var isLoading by mutableStateOf(false)
-        private set
-
+    internal var email by mutableStateOf("")
+    internal var password by mutableStateOf("")
+    internal var confirmPassword by mutableStateOf("")
+    internal var address by mutableStateOf("")
+    internal var phoneNumber by mutableStateOf("")
+    internal var isLoading by mutableStateOf(false)
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     fun onEmailChange(newEmail: String) { email = newEmail }
