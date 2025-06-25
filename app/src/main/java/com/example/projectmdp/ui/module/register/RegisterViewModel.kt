@@ -4,9 +4,8 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.projectmdp.data.model.auth.RegisterDto
 import com.example.projectmdp.data.repository.AuthRepository
-import com.example.projectmdp.data.source.remote.RetrofitInstance
+import com.example.projectmdp.data.source.remote.VerifyTokenRequest
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,17 +17,17 @@ class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
     var email by mutableStateOf("")
-        private set
+//        private set
     var password by mutableStateOf("")
-        private set
+//        private set
     var confirmPassword by mutableStateOf("")
-        private set
+//        private set
     var address by mutableStateOf("")
-        private set
+//        private set
     var phoneNumber by mutableStateOf("")
-        private set
+//        private set
     var isLoading by mutableStateOf(false)
-        private set
+//        private set
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
@@ -43,32 +42,42 @@ class RegisterViewModel @Inject constructor(
             Log.e("Register", "Passwords do not match")
             return
         }
+
         isLoading = true
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Log.d("Register", "Success")
-                    // Call backend register
-                    viewModelScope.launch {
-                        try {
-                            val registerDto = RegisterDto(
-                                username = email.substringBefore("@"),
-                                email = email,
-                                password = password,
-                                address = address,
-                                phone_number = phoneNumber,
-                                role = "user"
-                            )
-                            val response = authRepository.register(registerDto)
-                            Log.d("BackendRegister", "Success: $response")
-                        } catch (e: Exception) {
-                            Log.e("BackendRegister", "Failed: ${e.message}")
-                        } finally {
+                    Log.d("Register", "Firebase auth success")
+
+                    // ✅ Ambil ID Token dari Firebase
+                    auth.currentUser?.getIdToken(true)
+                        ?.addOnSuccessListener { result ->
+                            val idToken = result.token
+                            Log.d("Register", "ID Token: $idToken")
+
+                            if (idToken != null) {
+                                viewModelScope.launch {
+                                    try {
+                                        // 📤 Kirim ID Token ke backend sesuai endpoint verifyFirebaseToken
+                                        val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
+                                        Log.d("BackendRegister", "Success: $response")
+                                    } catch (e: Exception) {
+                                        Log.e("BackendRegister", "Failed: ${e.message}")
+                                    } finally {
+                                        isLoading = false
+                                    }
+                                }
+                            } else {
+                                Log.e("Register", "Failed to retrieve ID token")
+                                isLoading = false
+                            }
+                        }
+                        ?.addOnFailureListener { e ->
+                            Log.e("Register", "Get ID token failed: ${e.message}")
                             isLoading = false
                         }
-                    }
                 } else {
-                    Log.e("Register", "Failed: ${task.exception?.message}")
+                    Log.e("Register", "Firebase auth failed: ${task.exception?.message}")
                     isLoading = false
                 }
             }

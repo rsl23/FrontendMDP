@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.projectmdp.data.model.auth.RegisterDto
 import com.example.projectmdp.data.repository.AuthRepository
 import com.example.projectmdp.data.source.remote.RetrofitInstance
+import com.example.projectmdp.data.source.remote.VerifyTokenRequest
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,7 +47,7 @@ class LoginViewModel @Inject constructor(
                             // Call backend login
                             viewModelScope.launch {
                                 try {
-                                    val response = authRepository.login(email, password)
+                                    val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
                                     Log.d("BackendLogin", "Success: $response")
                                 } catch (e: Exception) {
                                     Log.e("BackendLogin", "Failed: ${e.message}")
