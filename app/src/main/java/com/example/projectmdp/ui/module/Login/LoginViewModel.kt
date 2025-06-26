@@ -42,6 +42,10 @@ class LoginViewModel @Inject constructor(
     fun onPasswordChange(newPassword: String) { password = newPassword }
 
     fun login() {
+        if (email.isBlank() || password.isBlank()) {
+            Log.e("Login", "Email or password is empty")
+            return
+        }
         isLoading = true
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
