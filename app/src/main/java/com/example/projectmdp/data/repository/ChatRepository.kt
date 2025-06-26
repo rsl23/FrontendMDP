@@ -70,7 +70,7 @@ fun com.example.projectmdp.data.source.response.Conversation.toConversation(): C
     )
 }
 
-fun com.example.projectmdp.data.source.response.OtherUser.toUser(): User {
+fun com.example.projectmdp.data.source.response.OtherUser.toChatUser(): User {
     return User(
         id = this.id,
         email = this.email,
@@ -115,7 +115,7 @@ class ChatRepository @Inject constructor(
                 response.data?.let { responseData ->
                     val messages = responseData.data.messages.map { it.toChatMessage() }
                     val pagination = responseData.data.pagination.toChatPagination()
-                    val otherUser = responseData.data.otherUser.toUser()
+                    val otherUser = responseData.data.otherUser.toChatUser()
                     val chatMessages = ChatMessages(messages, pagination, otherUser)
                     emit(Result.success(chatMessages))
                 } ?: emit(Result.failure(Exception("No data received")))
