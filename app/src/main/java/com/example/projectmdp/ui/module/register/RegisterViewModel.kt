@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.projectmdp.data.model.auth.RegisterDto
 import com.example.projectmdp.data.repository.AuthRepository
-import com.example.projectmdp.data.source.remote.VerifyTokenRequest
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,17 +17,17 @@ class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
     var email by mutableStateOf("")
-//        private set
+        private set
     var password by mutableStateOf("")
-//        private set
+        private set
     var confirmPassword by mutableStateOf("")
-//        private set
+        private set
     var address by mutableStateOf("")
-//        private set
+        private set
     var phoneNumber by mutableStateOf("")
-//        private set
+        private set
     var isLoading by mutableStateOf(false)
-//        private set
+        private set
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
@@ -59,7 +59,7 @@ class RegisterViewModel @Inject constructor(
                                 viewModelScope.launch {
                                     try {
                                         // 📤 Kirim ID Token ke backend sesuai endpoint verifyFirebaseToken
-                                        val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
+                                        val response = authRepository.verifyToken(idToken)
                                         Log.d("BackendRegister", "Success: $response")
                                     } catch (e: Exception) {
                                         Log.e("BackendRegister", "Failed: ${e.message}")
