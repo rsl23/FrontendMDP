@@ -10,8 +10,8 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 
 interface AuthApi {
-    @POST("/login")
-    suspend fun login( @Body request: LoginRequest): AuthResponse
+//    @POST("/login")
+//    suspend fun login( @Body request: LoginRequest): AuthResponse
 //    @POST("/signup")
 //    suspend fun register(@Body registerDto: RegisterDto): String
     @GET("/logout")

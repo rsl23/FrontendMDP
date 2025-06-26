@@ -13,6 +13,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -29,6 +33,10 @@ class LoginViewModel @Inject constructor(
         private set
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val _googleSignInEvent = MutableSharedFlow<Unit>()
+    val googleSignInEvent = _googleSignInEvent.asSharedFlow()
+    private val _resetPasswordState = MutableStateFlow<Result<String>?>(null)
+    val resetPasswordState = _resetPasswordState.asStateFlow()
 
     fun onEmailChange(newEmail: String) { email = newEmail }
     fun onPasswordChange(newPassword: String) { password = newPassword }
@@ -91,12 +99,69 @@ class LoginViewModel @Inject constructor(
         return BeginSignInRequest.builder()
             .setGoogleIdTokenRequestOptions(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                    .setSupported(true)
-                    .setServerClientId(webClientId)
-                    .setFilterByAuthorizedAccounts(false)
+                    .setSupported(true) // Wajib true untuk bisa sign-in ke Firebase
+                    .setServerClientId(webClientId) // Web client ID Anda dari Firebase
+                    .setFilterByAuthorizedAccounts(false) // Set false agar semua akun Google di perangkat ditampilkan
                     .build()
             )
-            .setAutoSelectEnabled(true)
+            //tggl diubah true false, kalau true lgsg login otomatis
+            .setAutoSelectEnabled(false) // Coba login otomatis jika memungkinkan
             .build()
     }
+
+    fun signInWithGoogle(idToken: String?) {
+        if (idToken == null) {
+            Log.e("Auth", "ID Token is null")
+            return
+        }
+
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("Auth", "Firebase sign-in success")
+                    auth.currentUser?.getIdToken(true)
+                        ?.addOnSuccessListener { result ->
+                            val token = result.token
+                            if (token != null) {
+                                Log.d("Auth", "Firebase ID Token: $token")
+                                RetrofitInstance.setToken(token)
+
+                                viewModelScope.launch {
+                                    try {
+                                        val response = authRepository.verifyToken(VerifyTokenRequest(token))
+                                        Log.d("Auth", "Backend success: $response")
+                                    } catch (e: Exception) {
+                                        Log.e("Auth", "Backend error: ${e.message}")
+                                    }
+                                }
+                            }
+                        }
+                } else {
+                    Log.e("Auth", "Firebase sign-in failed: ${task.exception?.message}")
+                }
+            }
+    }
+
+    fun sendPasswordResetEmail(email: String) {
+        if (email.isBlank()) {
+            _resetPasswordState.value = Result.failure(Exception("Email cannot be empty"))
+            return
+        }
+
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    _resetPasswordState.value = Result.success("Reset email sent to $email")
+                } else {
+                    val error = task.exception?.localizedMessage ?: "Unknown error"
+                    _resetPasswordState.value = Result.failure(Exception(error))
+                }
+            }
+    }
+
+    fun clearResetPasswordState() {
+        _resetPasswordState.value = null
+    }
+
 }

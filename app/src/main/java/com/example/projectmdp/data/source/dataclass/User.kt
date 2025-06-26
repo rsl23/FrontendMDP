@@ -7,19 +7,47 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class User(
     val id: String,
-    var username: String,
-    var password: String,
-    var address: String,
-    var email: String,
-    var phone_number: String,
-    var role: String,
+    val email: String,
+    val username: String?,
+    val address: String = "",
+    val phone_number: String = "",
+    val role: String = "buyer",
+    val firebase_uid: String? = null,
+    val profile_picture: String? = null,
+    val auth_provider: String = "local",
+    val created_at: String,
+    val deleted_at: String? = null
 ): Parcelable {
-    companion object{
-        fun fromUserEntity(u : UserEntity) = User(u.id, u.username, u.password, u.address, u.email, u.phone_number, u.role)
+
+    companion object {
+        fun fromUserEntity(u: UserEntity) = User(
+            id = u.id,
+            email = u.email,
+            username = u.username,
+            address = u.address,
+            phone_number = u.phone_number,
+            role = u.role,
+            firebase_uid = u.firebase_uid,
+            profile_picture = u.profile_picture,
+            auth_provider = u.auth_provider,
+            created_at = u.created_at,
+            deleted_at = u.deleted_at
+        )
+
+        fun empty() = User("", "", null, "", "", "buyer", null, null, "local", "", null)
     }
 
     fun toUserEntity() = UserEntity(
-        id, username, password, address, email, phone_number, role
+        id = id,
+        email = email,
+        username = username,
+        address = address,
+        phone_number = phone_number,
+        role = role,
+        firebase_uid = firebase_uid,
+        profile_picture = profile_picture,
+        auth_provider = auth_provider,
+        created_at = created_at,
+        deleted_at = deleted_at
     )
-
 }

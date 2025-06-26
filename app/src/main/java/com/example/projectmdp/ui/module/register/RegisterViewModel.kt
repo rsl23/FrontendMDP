@@ -4,11 +4,14 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.projectmdp.data.model.auth.RegisterDto
 import com.example.projectmdp.data.repository.AuthRepository
 import com.example.projectmdp.data.source.remote.VerifyTokenRequest
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,6 +33,8 @@ class RegisterViewModel @Inject constructor(
 //        private set
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val _googleSignInEvent = MutableSharedFlow<Unit>()
+    val googleSignInEvent = _googleSignInEvent.asSharedFlow()
 
     fun onEmailChange(newEmail: String) { email = newEmail }
     fun onPasswordChange(newPassword: String) { password = newPassword }
@@ -49,7 +54,7 @@ class RegisterViewModel @Inject constructor(
                 if (task.isSuccessful) {
                     Log.d("Register", "Firebase auth success")
 
-                    // ✅ Ambil ID Token dari Firebase
+                    // Ambil ID Token dari Firebase
                     auth.currentUser?.getIdToken(true)
                         ?.addOnSuccessListener { result ->
                             val idToken = result.token
@@ -58,7 +63,7 @@ class RegisterViewModel @Inject constructor(
                             if (idToken != null) {
                                 viewModelScope.launch {
                                     try {
-                                        // 📤 Kirim ID Token ke backend sesuai endpoint verifyFirebaseToken
+                                        // Kirim ID Token ke backend sesuai endpoint verifyFirebaseToken
                                         val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
                                         Log.d("BackendRegister", "Success: $response")
                                     } catch (e: Exception) {
@@ -83,7 +88,22 @@ class RegisterViewModel @Inject constructor(
             }
     }
 
-    // Enhanced firebaseAuthWithGoogle function for RegisterViewModel.kt
+    fun onGoogleSignInClicked() {
+        viewModelScope.launch {
+            _googleSignInEvent.emit(Unit)
+        }
+    }
+
+    //Fungsi ini akan dipanggil oleh UI setelah mendapatkan idToken
+    fun onGoogleSignInResult(idToken: String?) {
+        if (idToken == null) {
+            Log.e("GoogleRegister", "Google Sign-In failed or idToken is null")
+            // Mungkin tampilkan pesan error di UI melalui state lain
+            return
+        }
+        firebaseAuthWithGoogle(idToken)
+    }
+
     fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         isLoading = true
@@ -91,49 +111,34 @@ class RegisterViewModel @Inject constructor(
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Log.d("GoogleRegister", "signInWithCredential:success")
-                    // Get the user from Firebase
-                    val user = auth.currentUser
+                    Log.d("GoogleRegister", "Success")
+                    auth.currentUser?.getIdToken(true)
+                        ?.addOnSuccessListener { result ->
+                            val idToken = result.token
+                            Log.d("Register", "ID Token: $idToken")
 
-                    if (user != null) {
-                        // Extract email for registration form
-                        email = user.email ?: ""
-
-                        // Get the Firebase token for backend authentication
-                        user.getIdToken(true)
-                            .addOnSuccessListener { result ->
-                                val firebaseToken = result.token ?: ""
-                                RetrofitInstance.setToken(firebaseToken)
-
-                                // Verify token with backend
+                            if (idToken != null) {
                                 viewModelScope.launch {
                                     try {
-                                        // Your backend should handle verification through the verify-token endpoint
-                                        // and create user if needed
-
-                                        // If additional fields are required (address, phone), we can update them
-                                        if (address.isNotEmpty() || phoneNumber.isNotEmpty()) {
-                                            // Here you could make another API call to update user profile
-                                            // with address and phone information
-                                            Log.d("GoogleRegister", "Additional info available for backend")
-                                        }
-
-                                        Log.d("GoogleRegister", "Backend authentication complete")
+                                        //  Kirim ID Token ke backend sesuai endpoint verifyFirebaseToken
+                                        val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
+                                        Log.d("Register With Google", "Success: $response")
                                     } catch (e: Exception) {
-                                        Log.e("GoogleRegister", "Backend auth failed: ${e.message}")
+                                        Log.e("Register With Google", "Failed: ${e.message}")
                                     } finally {
                                         isLoading = false
                                     }
                                 }
-                            }
-                            .addOnFailureListener { e ->
-                                Log.e("GoogleRegister", "Failed to get token: ${e.message}")
+                            } else {
+                                Log.e("Register", "Failed to retrieve ID token")
                                 isLoading = false
                             }
-                    } else {
-                        Log.e("GoogleRegister", "User is null after successful authentication")
-                        isLoading = false
-                    }
+                        }
+                        ?.addOnFailureListener { e ->
+                            Log.e("Register", "Get ID token failed: ${e.message}")
+                            isLoading = false
+                        }
+
                 } else {
                     Log.e("GoogleRegister", "Failed: ${task.exception?.message}")
                     isLoading = false

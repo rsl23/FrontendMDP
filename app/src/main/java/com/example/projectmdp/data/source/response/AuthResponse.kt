@@ -13,7 +13,7 @@ data class AuthResponse(
 data class VerifyResponse(
     val status: Int,
     val message: String,
-    val data: VerifyData
+    val data: VerifyData?
 )
 
 data class VerifyData(
