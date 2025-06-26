@@ -13,6 +13,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -29,7 +31,8 @@ class LoginViewModel @Inject constructor(
         private set
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-
+    private val _googleSignInEvent = MutableSharedFlow<Unit>()
+    val googleSignInEvent = _googleSignInEvent.asSharedFlow()
     fun onEmailChange(newEmail: String) { email = newEmail }
     fun onPasswordChange(newPassword: String) { password = newPassword }
 

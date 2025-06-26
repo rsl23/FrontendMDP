@@ -1,7 +1,6 @@
 package com.example.projectmdp.data.source.dataclass
 
 import android.os.Parcelable
-import com.example.projectmdp.data.source.local.relationship.empty
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize

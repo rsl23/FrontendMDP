@@ -22,37 +22,37 @@ data class TransactionWithDetails(
     val product: ProductEntity?
 ) {
     // Extension function untuk convert ke domain model
-    fun toTransaction(): Transaction {
-        return Transaction(
-            transaction_id = transaction.transaction_id,
-            user_seller = seller?.let {
-                UserSeller(
-                    id = it.id,
-                    name = it.name,
-                    email = it.email,
-                    phone = it.phone_number,
-                    profile_picture = it.profile_picture
-                )
-            } ?: UserSeller.empty(),
-            email_buyer = transaction.email_buyer,
-            product = product?.let {
-                ProductInfo(
-                    product_id = it.product_id,
-                    name = it.name,
-                    description = it.description ?: "",
-                    price = it.price,
-                    category = it.category ?: "",
-                    image_url = it.image
-                )
-            } ?: ProductInfo.empty(),
-            quantity = transaction.quantity,
-            total_price = transaction.total_price,
-            datetime = transaction.datetime,
-            payment_id = transaction.payment_id,
-            payment_status = transaction.payment_status,
-            payment_description = transaction.payment_description
-        )
-    }
+//    fun toTransaction(): Transaction {
+//        return Transaction(
+//            transaction_id = transaction.transaction_id,
+//            user_seller = seller?.let {
+//                UserSeller(
+//                    id = it.id,
+//                    name = it.name,
+//                    email = it.email,
+//                    phone = it.phone_number,
+//                    profile_picture = it.profile_picture
+//                )
+//            } ?: UserSeller.empty(),
+//            email_buyer = transaction.email_buyer,
+//            product = product?.let {
+//                ProductInfo(
+//                    product_id = it.product_id,
+//                    name = it.name,
+//                    description = it.description ?: "",
+//                    price = it.price,
+//                    category = it.category ?: "",
+//                    image_url = it.image
+//                )
+//            } ?: ProductInfo.empty(),
+//            quantity = transaction.quantity,
+//            total_price = transaction.total_price,
+//            datetime = transaction.datetime,
+//            payment_id = transaction.payment_id,
+//            payment_status = transaction.payment_status,
+//            payment_description = transaction.payment_description
+//        )
+//    }
 }
 
 // Helper objects untuk empty states
