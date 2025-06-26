@@ -7,20 +7,47 @@ import java.util.Date
 
 @Parcelize
 data class Product(
-    val id: String,
-    var description: String,
-    var image: String,
-    var name: String,
-    var user_id: String,
-    var created_at: Date = Date(),
-    var updated_at: Date = Date(),
-    var deleted_at: Date? = null
+    val product_id: String,
+    val name: String,
+    val price: Double,
+    val description: String?,
+    val category: String = "",              // Default empty string sesuai backend
+    val image: String = "",                 // Default empty string sesuai backend
+    val user_id: String,                    // Seller ID
+    val created_at: String,
+    val deleted_at: String? = null
 ): Parcelable {
-    companion object{
-        fun fromProductEntity(p : ProductEntity) =
-            Product(p.id, p.description, p.image, p.name, p.user_id, Date(p.created_at), Date(p.updated_at), if(p.deleted_at == null) null else Date(p.created_at))
+
+    companion object {
+        fun fromProductEntity(p: ProductEntity) = Product(
+            product_id = p.product_id,
+            name = p.name,
+            price = p.price,
+            description = p.description,
+            category = p.category,
+            image = p.image,
+            user_id = p.user_id,
+            created_at = p.created_at,
+            deleted_at = p.deleted_at
+        )
+
+        fun empty() = Product("", "", 0.0, null, "", "", "", "", null)
     }
+
     fun toProductEntity() = ProductEntity(
-        id, description, image, name, user_id, created_at.time, updated_at.time, deleted_at?.time
+        product_id = product_id,
+        name = name,
+        price = price,
+        description = description,
+        category = category,
+        image = image,
+        user_id = user_id,
+        created_at = created_at,
+        deleted_at = deleted_at
     )
+
+    // Helper methods
+    fun isDeleted() = deleted_at != null
+    fun hasImage() = image.isNotEmpty()
+    fun hasCategory() = category.isNotEmpty()
 }

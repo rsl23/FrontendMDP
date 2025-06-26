@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -37,6 +38,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
     val email = viewModel.email
     val password = viewModel.password
     val isLoading = viewModel.isLoading
+//    val webClientId = stringResource(R.string.default_web_client_id)
 
     Box(
         modifier = Modifier
@@ -99,6 +101,9 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
                 singleLine = true
             )
 
+            val emailState = remember { mutableStateOf("") }
+            val showDialog = remember { mutableStateOf(false) }
+            val resetResult by viewModel.resetPasswordState.collectAsState()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -109,9 +114,61 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
                     text = "Forgot Password?",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { /* Handle forgot password */ }
+                    modifier = Modifier.clickable {
+                        showDialog.value = true // Munculkan dialog saat diklik
+                    }
                 )
             }
+
+// ⬇️ Tambahkan bagian ini langsung di bawah Row di atas
+//            val context = LocalContext.current
+
+
+            if (showDialog.value) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showDialog.value = false
+                        viewModel.clearResetPasswordState()
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.sendPasswordResetEmail(emailState.value)
+                        }) {
+                            Text("Send")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showDialog.value = false
+                            viewModel.clearResetPasswordState()
+                        }) {
+                            Text("Cancel")
+                        }
+                    },
+                    title = { Text("Reset Password") },
+                    text = {
+                        Column {
+                            OutlinedTextField(
+                                value = emailState.value,
+                                onValueChange = { emailState.value = it },
+                                label = { Text("Email") },
+                                singleLine = true,
+                            )
+                            if (resetResult != null) {
+                                when {
+                                    resetResult?.isSuccess == true -> {
+                                        Text("✔ ${resetResult?.getOrNull()}", color = Color.Green)
+                                    }
+                                    resetResult?.isFailure == true -> {
+                                        Text("✘ ${resetResult?.exceptionOrNull()?.message}", color = Color.Red)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -143,7 +200,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
 
             val context = LocalContext.current
             val activity = context as Activity
-            val webClientId = "YOUR_WEB_CLIENT_ID" // replace with actual Web Client ID from Firebase
+            val webClientId = "634972513606-mbo2jqteefq4teo1mlhb62ekeleh34fa.apps.googleusercontent.com" // replace with actual Web Client ID from Firebase
 
             val oneTapClient = remember { Identity.getSignInClient(context) }
             val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
@@ -151,7 +208,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
                     val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
                     val idToken = credential.googleIdToken
                     if (idToken != null) {
-                        viewModel.firebaseAuthWithGoogleIdToken(idToken)
+                        viewModel.signInWithGoogle(idToken)
                     } else {
                         Log.e("OneTap", "No ID token!")
                     }
