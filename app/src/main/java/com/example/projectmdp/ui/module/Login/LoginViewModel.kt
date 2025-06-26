@@ -99,7 +99,43 @@ class LoginViewModel @Inject constructor(
                     .setFilterByAuthorizedAccounts(false) // Set false agar semua akun Google di perangkat ditampilkan
                     .build()
             )
-            .setAutoSelectEnabled(true) // Coba login otomatis jika memungkinkan
+            //tggl diubah true false, kalau true lgsg login otomatis
+            .setAutoSelectEnabled(false) // Coba login otomatis jika memungkinkan
             .build()
     }
+
+    fun signInWithGoogle(idToken: String?) {
+        if (idToken == null) {
+            Log.e("Auth", "ID Token is null")
+            return
+        }
+
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("Auth", "Firebase sign-in success")
+                    auth.currentUser?.getIdToken(true)
+                        ?.addOnSuccessListener { result ->
+                            val token = result.token
+                            if (token != null) {
+                                Log.d("Auth", "Firebase ID Token: $token")
+                                RetrofitInstance.setToken(token)
+
+                                viewModelScope.launch {
+                                    try {
+                                        val response = authRepository.verifyToken(VerifyTokenRequest(token))
+                                        Log.d("Auth", "Backend success: $response")
+                                    } catch (e: Exception) {
+                                        Log.e("Auth", "Backend error: ${e.message}")
+                                    }
+                                }
+                            }
+                        }
+                } else {
+                    Log.e("Auth", "Firebase sign-in failed: ${task.exception?.message}")
+                }
+            }
+    }
+
 }

@@ -145,7 +145,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
 
             val context = LocalContext.current
             val activity = context as Activity
-            val webClientId = "YOUR_WEB_CLIENT_ID" // replace with actual Web Client ID from Firebase
+            val webClientId = "634972513606-mbo2jqteefq4teo1mlhb62ekeleh34fa.apps.googleusercontent.com" // replace with actual Web Client ID from Firebase
 
             val oneTapClient = remember { Identity.getSignInClient(context) }
             val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
@@ -153,7 +153,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
                     val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
                     val idToken = credential.googleIdToken
                     if (idToken != null) {
-                        viewModel.firebaseAuthWithGoogleIdToken(idToken)
+                        viewModel.signInWithGoogle(idToken)
                     } else {
                         Log.e("OneTap", "No ID token!")
                     }
