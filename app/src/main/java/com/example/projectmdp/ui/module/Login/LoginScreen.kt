@@ -101,6 +101,9 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
                 singleLine = true
             )
 
+            val emailState = remember { mutableStateOf("") }
+            val showDialog = remember { mutableStateOf(false) }
+            val resetResult by viewModel.resetPasswordState.collectAsState()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -111,9 +114,61 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
                     text = "Forgot Password?",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { /* Handle forgot password */ }
+                    modifier = Modifier.clickable {
+                        showDialog.value = true // Munculkan dialog saat diklik
+                    }
                 )
             }
+
+// ⬇️ Tambahkan bagian ini langsung di bawah Row di atas
+//            val context = LocalContext.current
+
+
+            if (showDialog.value) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showDialog.value = false
+                        viewModel.clearResetPasswordState()
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.sendPasswordResetEmail(emailState.value)
+                        }) {
+                            Text("Send")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showDialog.value = false
+                            viewModel.clearResetPasswordState()
+                        }) {
+                            Text("Cancel")
+                        }
+                    },
+                    title = { Text("Reset Password") },
+                    text = {
+                        Column {
+                            OutlinedTextField(
+                                value = emailState.value,
+                                onValueChange = { emailState.value = it },
+                                label = { Text("Email") },
+                                singleLine = true,
+                            )
+                            if (resetResult != null) {
+                                when {
+                                    resetResult?.isSuccess == true -> {
+                                        Text("✔ ${resetResult?.getOrNull()}", color = Color.Green)
+                                    }
+                                    resetResult?.isFailure == true -> {
+                                        Text("✘ ${resetResult?.exceptionOrNull()?.message}", color = Color.Red)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 

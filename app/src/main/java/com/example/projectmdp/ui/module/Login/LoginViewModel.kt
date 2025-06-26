@@ -14,7 +14,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -33,6 +35,9 @@ class LoginViewModel @Inject constructor(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _googleSignInEvent = MutableSharedFlow<Unit>()
     val googleSignInEvent = _googleSignInEvent.asSharedFlow()
+    private val _resetPasswordState = MutableStateFlow<Result<String>?>(null)
+    val resetPasswordState = _resetPasswordState.asStateFlow()
+
     fun onEmailChange(newEmail: String) { email = newEmail }
     fun onPasswordChange(newPassword: String) { password = newPassword }
 
@@ -136,6 +141,27 @@ class LoginViewModel @Inject constructor(
                     Log.e("Auth", "Firebase sign-in failed: ${task.exception?.message}")
                 }
             }
+    }
+
+    fun sendPasswordResetEmail(email: String) {
+        if (email.isBlank()) {
+            _resetPasswordState.value = Result.failure(Exception("Email cannot be empty"))
+            return
+        }
+
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    _resetPasswordState.value = Result.success("Reset email sent to $email")
+                } else {
+                    val error = task.exception?.localizedMessage ?: "Unknown error"
+                    _resetPasswordState.value = Result.failure(Exception(error))
+                }
+            }
+    }
+
+    fun clearResetPasswordState() {
+        _resetPasswordState.value = null
     }
 
 }
