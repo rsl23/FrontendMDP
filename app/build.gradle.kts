@@ -120,4 +120,7 @@ dependencies {
 //    implementation("androidx.compose.material3:material3-icons-core:1.2.0")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.3")
     implementation("androidx.compose.material:material-icons-extended")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3") // Or the latest stable version
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3") // For Android specific dispatchers
 }

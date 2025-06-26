@@ -6,30 +6,30 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectmdp.data.model.auth.RegisterDto
 import com.example.projectmdp.data.repository.AuthRepository
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
     var email by mutableStateOf("")
-        private set
     var password by mutableStateOf("")
-        private set
     var confirmPassword by mutableStateOf("")
-        private set
     var address by mutableStateOf("")
-        private set
     var phoneNumber by mutableStateOf("")
-        private set
     var isLoading by mutableStateOf(false)
         private set
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val _googleSignInEvent = MutableSharedFlow<Unit>()
+    val googleSignInEvent = _googleSignInEvent.asSharedFlow()
 
     fun onEmailChange(newEmail: String) { email = newEmail }
     fun onPasswordChange(newPassword: String) { password = newPassword }
@@ -83,6 +83,22 @@ class RegisterViewModel @Inject constructor(
             }
     }
 
+    fun onGoogleSignInClicked() {
+        viewModelScope.launch {
+            _googleSignInEvent.emit(Unit)
+        }
+    }
+
+    //Fungsi ini akan dipanggil oleh UI setelah mendapatkan idToken
+    fun onGoogleSignInResult(idToken: String?) {
+        if (idToken == null) {
+            Log.e("GoogleRegister", "Google Sign-In failed or idToken is null")
+            // Mungkin tampilkan pesan error di UI melalui state lain
+            return
+        }
+        firebaseAuthWithGoogle(idToken)
+    }
+
     fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
@@ -95,4 +111,6 @@ class RegisterViewModel @Inject constructor(
             }
     }
 }
+
+
 

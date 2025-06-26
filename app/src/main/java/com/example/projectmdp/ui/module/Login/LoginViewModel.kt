@@ -91,12 +91,12 @@ class LoginViewModel @Inject constructor(
         return BeginSignInRequest.builder()
             .setGoogleIdTokenRequestOptions(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                    .setSupported(true)
-                    .setServerClientId(webClientId)
-                    .setFilterByAuthorizedAccounts(false)
+                    .setSupported(true) // Wajib true untuk bisa sign-in ke Firebase
+                    .setServerClientId(webClientId) // Web client ID Anda dari Firebase
+                    .setFilterByAuthorizedAccounts(false) // Set false agar semua akun Google di perangkat ditampilkan
                     .build()
             )
-            .setAutoSelectEnabled(true)
+            .setAutoSelectEnabled(true) // Coba login otomatis jika memungkinkan
             .build()
     }
 }

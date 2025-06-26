@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.example.projectmdp.R
 
 
 @Composable
@@ -37,6 +39,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
     val email = viewModel.email
     val password = viewModel.password
     val isLoading = viewModel.isLoading
+    val webClientId = stringResource(R.string.default_web_client_id)
 
     Box(
         modifier = Modifier

@@ -10,10 +10,10 @@ class ProductRepository @Inject constructor() {
         return response.products
     }
 
-    open suspend fun createProduct(product: ProductDto): String {
-        val response = RetrofitInstance.Productapi.addProduct(product)
-        return response.message
-    }
+//    open suspend fun createProduct(product: ProductDto): String {
+//        val response = RetrofitInstance.Productapi.addProduct(product)
+//        return response.message
+//    }
 
     open suspend fun getProductByName(name: String): ProductDto {
         val response = RetrofitInstance.Productapi.getProductByName(name)

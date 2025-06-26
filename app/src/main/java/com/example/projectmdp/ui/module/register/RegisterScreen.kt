@@ -1,5 +1,8 @@
 package com.example.projectmdp.ui.module.register
 
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,13 +16,20 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.projectmdp.R
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun RegisterScreen(
@@ -34,6 +44,38 @@ fun RegisterScreen(
     val phoneNumber = viewModel.phoneNumber
     val isLoading = viewModel.isLoading
 
+    val context = LocalContext.current
+
+    val googleSignInClient = remember {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account?.idToken
+            Log.d("RegisterScreen", "ID Token successfully retrieved: $idToken")
+            viewModel.onGoogleSignInResult(idToken)
+        } catch (e: ApiException) {
+            Log.e("RegisterScreen", "Google sign in failed", e)
+            viewModel.onGoogleSignInResult(null)
+        }
+    }
+
+    LaunchedEffect(key1 = viewModel) {
+        viewModel.googleSignInEvent.collect {
+            Log.d("RegisterScreen", "Launching Google Sign-In flow")
+            val signInIntent = googleSignInClient.signInIntent
+            googleSignInLauncher.launch(signInIntent)
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -175,7 +217,8 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedButton(
-                onClick = { viewModel.registerWithGoogle() },
+                onClick = { viewModel.onGoogleSignInClicked() },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -215,6 +258,3 @@ fun RegisterScreen(
     }
 }
 
-private fun RegisterViewModel.registerWithGoogle() {
-    TODO("Not yet implemented")
-}
