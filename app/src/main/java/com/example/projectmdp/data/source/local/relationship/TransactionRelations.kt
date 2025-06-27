@@ -20,7 +20,7 @@ data class TransactionWithDetails(
         entityColumn = "product_id"
     )
     val product: ProductEntity?
-) {
+)
     // Extension function untuk convert ke domain model
 //    fun toTransaction(): Transaction {
 //        return Transaction(
@@ -53,7 +53,7 @@ data class TransactionWithDetails(
 //            payment_description = transaction.payment_description
 //        )
 //    }
-}
+
 
 // Helper objects untuk empty states
 //fun UserSeller.Companion.empty() = UserSeller("", "", "", null, null)

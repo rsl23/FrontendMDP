@@ -35,7 +35,7 @@ interface TransactionApi {
 }
 
 data class UpdateTransactionStatusRequest(
-    val payment_status: String,  // "pending", "completed", "failed", "cancelled"
+    val payment_status: String,  // "pending", "completed", "refunded", "cancelled"
     val payment_description: String = ""
 )
 data class CreateTransactionRequest(

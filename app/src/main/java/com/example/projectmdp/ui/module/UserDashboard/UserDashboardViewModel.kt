@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.projectmdp.data.model.product.Product
+import com.example.projectmdp.data.source.dataclass.Product
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -61,8 +61,21 @@ open class UserDashboardViewModel @Inject constructor() : ViewModel() {
 
                 val searchResults = mutableListOf<Product>()
                 for (document in querySnapshot.documents) {
-                    document.toObject<Product>()?.let { product ->
-                        searchResults.add(product.copy(product_id = document.id))
+                    // Convert Firestore document to the new Product class structure
+                    val data = document.data
+                    if (data != null) {
+                        val product = Product(
+                            product_id = document.id,
+                            name = data["name"] as? String ?: "",
+                            price = (data["price"] as? Number)?.toDouble() ?: 0.0,
+                            description = data["description"] as? String,
+                            category = data["category"] as? String ?: "",
+                            image = data["image"] as? String ?: "",
+                            user_id = data["user"] as? String ?: "",
+                            created_at = (data["created_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString() ?: "",
+                            deleted_at = (data["deleted_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString()
+                        )
+                        searchResults.add(product)
                     }
                 }
 
@@ -87,8 +100,21 @@ open class UserDashboardViewModel @Inject constructor() : ViewModel() {
 
                 val productList = mutableListOf<Product>()
                 for (document in querySnapshot.documents) {
-                    document.toObject<Product>()?.let { product ->
-                        productList.add(product.copy(product_id = document.id))
+                    // Convert Firestore document to the new Product class structure
+                    val data = document.data
+                    if (data != null) {
+                        val product = Product(
+                            product_id = document.id,
+                            name = data["name"] as? String ?: "",
+                            price = (data["price"] as? Number)?.toDouble() ?: 0.0,
+                            description = data["description"] as? String,
+                            category = data["category"] as? String ?: "",
+                            image = data["image"] as? String ?: "",
+                            user_id = data["user"] as? String ?: "",
+                            created_at = (data["created_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString() ?: "",
+                            deleted_at = (data["deleted_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString()
+                        )
+                        productList.add(product)
                     }
                 }
 
@@ -96,69 +122,12 @@ open class UserDashboardViewModel @Inject constructor() : ViewModel() {
                 Log.d("Dashboard", "Products loaded: ${productList.size}")
             } catch (e: Exception) {
                 Log.e("Dashboard", "Failed to load products: ${e.message}")
-                // Load sample data as fallback
-                loadSampleProducts()
+                // Just show an empty list instead of sample data
+                products = emptyList()
             } finally {
                 isLoading = false
             }
         }
-    }
-
-    private fun loadSampleProducts() {
-        products = listOf(
-            Product(
-                product_id = "1",
-                name = "iPhone 12 Pro",
-                price = "8,500,000",
-                description = "Good condition iPhone 12 Pro",
-                image = "https://via.placeholder.com/300x300?text=iPhone+12+Pro",
-                user = "seller1",
-                created_at = Timestamp.now(),
-                updated_at = Timestamp.now(),
-                deleted_at = null,
-//                sellerName = "John Doe",
-//                sellerLocation = "Surabaya, East Java"
-            ),
-            Product(
-                product_id = "2",
-                name = "Samsung Galaxy S21",
-                price = "7,200,000",
-                description = "Excellent condition Samsung Galaxy S21",
-                image = "https://via.placeholder.com/300x300?text=Galaxy+S21",
-                user = "seller2",
-                created_at = Timestamp.now(),
-                updated_at = Timestamp.now(),
-                deleted_at = null,
-//                sellerName = "Jane Smith",
-//                sellerLocation = "Jakarta, DKI Jakarta"
-            ),
-            Product(
-                product_id = "3",
-                name = "MacBook Air M1",
-                price = "12,000,000",
-                description = "Like new MacBook Air with M1 chip",
-                image = "https://via.placeholder.com/300x300?text=MacBook+Air",
-                user = "seller3",
-                created_at = Timestamp.now(),
-                updated_at = Timestamp.now(),
-                deleted_at = null,
-//                sellerName = "Bob Wilson",
-//                sellerLocation = "Bandung, West Java"
-            ),
-            Product(
-                product_id = "4",
-                name = "iPad Pro 11\"",
-                price = "9,800,000",
-                description = "iPad Pro 11 inch with Apple Pencil",
-                image = "https://via.placeholder.com/300x300?text=iPad+Pro",
-                user = "seller4",
-                created_at = Timestamp.now(),
-                updated_at = Timestamp.now(),
-                deleted_at = null,
-//                sellerName = "Alice Brown",
-//                sellerLocation = "Medan, North Sumatra"
-            )
-        )
     }
 
     private fun loadUserInitials() {
@@ -196,4 +165,3 @@ open class UserDashboardViewModel @Inject constructor() : ViewModel() {
         // Navigate to chat screen
     }
 }
-

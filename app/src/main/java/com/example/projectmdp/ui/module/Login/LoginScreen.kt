@@ -31,6 +31,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -38,7 +40,19 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
     val email = viewModel.email
     val password = viewModel.password
     val isLoading = viewModel.isLoading
-//    val webClientId = stringResource(R.string.default_web_client_id)
+
+    // Collect navigation events
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(key1 = true) {
+        viewModel.navigationEvent.collectLatest { destination ->
+            navController.navigate(destination) {
+                // Clear the back stack so user can't go back to login screen
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
