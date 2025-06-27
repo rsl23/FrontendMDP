@@ -17,11 +17,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun UserDashboardScreen(
@@ -62,6 +70,17 @@ fun UserDashboardScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        } else if (products.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No products found",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -73,6 +92,7 @@ fun UserDashboardScreen(
                 items(products) { product ->
                     ProductCard(
                         product = product,
+                        onProductClick = { /* Navigate to product details */ },
                         onBuyClick = { viewModel.buyProduct(product) },
                         onChatClick = { viewModel.chatWithSeller(product.user_id) }
                     )
@@ -152,58 +172,141 @@ private fun SearchBar(
 @Composable
 private fun ProductCard(
     product: com.example.projectmdp.data.source.dataclass.Product,
+    onProductClick: () -> Unit,
     onBuyClick: () -> Unit,
     onChatClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("id", "ID")) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp),
+            .clickable { onProductClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        // Rest of the Card implementation remains the same
-
-        // Action Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Button(
-                onClick = onBuyClick,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+            // Product Image
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "Buy",
-                    modifier = Modifier.size(16.dp)
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(product.image)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = product.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    error = painterResource(id = R.drawable.alert_error), // Add a placeholder drawable
+                    placeholder = painterResource(id = R.drawable.landscape_placeholder) // Add a placeholder drawable
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Buy", fontSize = 12.sp)
+
+                // Price Tag
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = currencyFormat.format(product.price),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
+                }
             }
 
-            OutlinedButton(
-                onClick = onChatClick,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
+            // Product Info
+            Column(
+                modifier = Modifier.padding(16.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.chat_24px),
-                    contentDescription = "Chat",
-                    modifier = Modifier.size(16.dp)
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Chat", fontSize = 12.sp)
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                product.description?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+
+                // Category Tag
+                if (product.hasCategory()) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    ) {
+                        Text(
+                            text = product.category,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onBuyClick,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Buy",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Buy", fontSize = 12.sp)
+                    }
+
+                    OutlinedButton(
+                        onClick = onChatClick,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.chat_24px),
+                            contentDescription = "Chat",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Chat", fontSize = 12.sp)
+                    }
+                }
             }
         }
     }
