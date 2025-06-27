@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.projectmdp.data.repository.AuthRepository
 import com.example.projectmdp.data.source.remote.RetrofitInstance
 import com.example.projectmdp.data.source.remote.VerifyTokenRequest
+import com.example.projectmdp.navigation.Routes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +32,9 @@ class LoginViewModel @Inject constructor(
 
     var idToken by mutableStateOf("")
         private set
+
+    private val _navigationEvent = MutableSharedFlow<String>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _googleSignInEvent = MutableSharedFlow<Unit>()
@@ -61,6 +65,15 @@ class LoginViewModel @Inject constructor(
                                 try {
                                     val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
                                     Log.d("BackendLogin", "Success: $response")
+
+                                    // Check user role and navigate accordingly
+                                    val userRole = response.data?.user?.role
+                                    if (userRole?.equals("user", ignoreCase = true) == true) {
+                                        _navigationEvent.emit(Routes.USER_DASHBOARD)
+                                    } else {
+                                        // For other roles, you can add navigation to their respective screens
+                                        Log.d("Login", "User has role: $userRole")
+                                    }
                                 } catch (e: Exception) {
                                     Log.e("BackendLogin", "Failed: ${e.message}")
                                 } finally {
@@ -119,6 +132,7 @@ class LoginViewModel @Inject constructor(
             return
         }
 
+        isLoading = true
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
@@ -135,14 +149,30 @@ class LoginViewModel @Inject constructor(
                                     try {
                                         val response = authRepository.verifyToken(VerifyTokenRequest(token))
                                         Log.d("Auth", "Backend success: $response")
+
+                                        // Check user role and navigate accordingly
+                                        val userRole = response.data?.user?.role
+                                        if (userRole?.equals("user", ignoreCase = true) == true) {
+                                            _navigationEvent.emit(Routes.USER_DASHBOARD)
+                                        } else {
+                                            // For other roles, you can add navigation to their respective screens
+                                            Log.d("Login", "User has role: $userRole")
+                                        }
                                     } catch (e: Exception) {
                                         Log.e("Auth", "Backend error: ${e.message}")
+                                    } finally {
+                                        isLoading = false
                                     }
                                 }
                             }
                         }
+                        ?.addOnFailureListener { e ->
+                            Log.e("Auth", "Failed to get token: ${e.message}")
+                            isLoading = false
+                        }
                 } else {
                     Log.e("Auth", "Firebase sign-in failed: ${task.exception?.message}")
+                    isLoading = false
                 }
             }
     }

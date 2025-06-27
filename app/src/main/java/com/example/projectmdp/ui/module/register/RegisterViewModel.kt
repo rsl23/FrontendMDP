@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.projectmdp.data.model.auth.RegisterDto
 import com.example.projectmdp.data.repository.AuthRepository
 import com.example.projectmdp.data.source.remote.VerifyTokenRequest
+import com.example.projectmdp.navigation.Routes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +36,10 @@ class RegisterViewModel @Inject constructor(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _googleSignInEvent = MutableSharedFlow<Unit>()
     val googleSignInEvent = _googleSignInEvent.asSharedFlow()
+
+    // Add navigation event for successful registration
+    private val _navigationEvent = MutableSharedFlow<String>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
 
     fun onEmailChange(newEmail: String) { email = newEmail }
     fun onPasswordChange(newPassword: String) { password = newPassword }
@@ -66,6 +71,9 @@ class RegisterViewModel @Inject constructor(
                                         // Kirim ID Token ke backend sesuai endpoint verifyFirebaseToken
                                         val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
                                         Log.d("BackendRegister", "Success: $response")
+
+                                        // Navigate to login screen after successful registration
+                                        _navigationEvent.emit(Routes.LOGIN)
                                     } catch (e: Exception) {
                                         Log.e("BackendRegister", "Failed: ${e.message}")
                                     } finally {
@@ -121,6 +129,9 @@ class RegisterViewModel @Inject constructor(
                                         //  Kirim ID Token ke backend sesuai endpoint verifyFirebaseToken
                                         val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
                                         Log.d("Register With Google", "Success: $response")
+
+                                        // Navigate to login screen after successful Google registration
+                                        _navigationEvent.emit(Routes.LOGIN)
                                     } catch (e: Exception) {
                                         Log.e("Register With Google", "Failed: ${e.message}")
                                     } finally {
@@ -143,4 +154,3 @@ class RegisterViewModel @Inject constructor(
             }
     }
 }
-
