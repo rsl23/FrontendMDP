@@ -25,10 +25,13 @@ import java.util.Locale
 @Composable
 fun DetailsScreen(
     navController: NavController,
-    productViewModel: ProductViewModel = viewModel() // Use hiltViewModel() if ProductViewModel is Hilt-injected
+    productViewModel: ProductViewModel = viewModel(),
+    productId: String
 ) {
-    // Corrected: Single declaration of product, safely unwrapped after null check
+    productViewModel.fetchProductById(productId)
     val product = productViewModel.selectedProduct.value
+    productViewModel.fetchSelectedProductSeller()
+    val seller = productViewModel.selectedProductSeller.value
     if (product == null) {
         // Log error or show a message before popping back
         // Log.e("DetailsScreen", "Product details not found.")
@@ -100,10 +103,12 @@ fun DetailsScreen(
                 style = MaterialTheme.typography.titleMedium, // Material 3 typography
                 fontWeight = FontWeight.SemiBold
             )
-            Text(
-                text = product.description,
-                style = MaterialTheme.typography.bodyLarge // Material 3 typography
-            )
+            product.description?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyLarge // Material 3 typography
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Price: $${product.price}",
@@ -112,17 +117,17 @@ fun DetailsScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Created At: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(product.created_at?.toDate())}",
+                text = "Created At: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(product.created_at)}",
                 style = MaterialTheme.typography.bodyMedium // Material 3 typography
             )
             Spacer(modifier = Modifier.weight(1f)) // Pushes content to the bottom
             Text(
-                text = "Seller: ${product.sellerName}",
+                text = "Seller: ${seller?.username}",
                 style = MaterialTheme.typography.titleMedium, // Material 3 typography
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Location: ${product.sellerLocation}",
+                text = "Location: ${seller?.address}",
                 style = MaterialTheme.typography.bodyMedium // Material 3 typography
             )
             Spacer(modifier = Modifier.height(16.dp))

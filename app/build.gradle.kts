@@ -61,7 +61,7 @@ dependencies {
     implementation(libs.androidx.material3) // Using the one from libs.versions.toml
     implementation("androidx.navigation:navigation-compose:2.7.7") // Specific version for navigation
     implementation("androidx.compose.foundation:foundation") // Essential Compose foundation components
-
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.4.0")
 
@@ -96,4 +96,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 }
