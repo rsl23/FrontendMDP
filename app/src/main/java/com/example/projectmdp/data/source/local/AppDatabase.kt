@@ -15,7 +15,7 @@ import com.example.projectmdp.data.source.local.entity.UserEntity
 abstract class AppDatabase: RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun productDao(): ProductDao
-    abstract fun transactionDao(): TransactionDao
+//    abstract fun transactionDao(): TransactionDao
     companion object{
         @Volatile
         private var INSTANCE: AppDatabase? = null

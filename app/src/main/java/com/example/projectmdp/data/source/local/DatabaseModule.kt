@@ -38,10 +38,10 @@ object DatabaseModule {
          return database.userDao()
      }
 
-    @Provides
-    fun provideTransactionDao(database: AppDatabase): TransactionDao {
-        return database.transactionDao()
-    }
+//    @Provides
+//    fun provideTransactionDao(database: AppDatabase): TransactionDao {
+//        return database.transactionDao()
+//    }
 
     @Provides
     @Singleton
