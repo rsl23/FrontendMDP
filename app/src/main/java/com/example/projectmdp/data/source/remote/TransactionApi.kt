@@ -1,45 +1,21 @@
 package com.example.projectmdp.data.source.remote
 
-import com.example.projectmdp.data.source.response.ApiResponse
-import com.example.projectmdp.data.source.response.CreateTransactionData
-import com.example.projectmdp.data.source.response.GetMyTransactionsData
-import com.example.projectmdp.data.source.response.GetTransactionByIdData
-import com.example.projectmdp.data.source.response.UpdateTransactionStatusData
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
+import com.example.projectmdp.data.source.response.MidtransResponse
+import retrofit2.http.*
 
 interface TransactionApi {
-    @POST("/create-transaction")
-    suspend fun createTransaction(
-        @Body request: CreateTransactionRequest
-    ): ApiResponse<CreateTransactionData>
+    @POST("api/transaction/create")
+    suspend fun createTransaction(@Body orderDetails: Map<String, Any>): MidtransResponse
 
-    @GET("/my-transactions")
-    suspend fun getMyTransactions(
-    ): ApiResponse<GetMyTransactionsData>
+    @GET("api/transaction/status/{orderId}")
+    suspend fun checkTransactionStatus(@Path("orderId") orderId: String): MidtransResponse
 
-    @GET("/transaction/{id}")
-    suspend fun getTransactionById(
-        @Path("id") id: String
-    ): ApiResponse<GetTransactionByIdData>
+    @GET("api/transaction/history")
+    suspend fun getTransactionHistory(): MidtransResponse
 
-    @PUT("/transaction/{id}/status")
-    suspend fun updateTransactionStatus(
-        @Path("id") id: String,
-        @Body request: UpdateTransactionStatusRequest
-    ): ApiResponse<UpdateTransactionStatusData>
+    @GET("api/transaction/{id}")
+    suspend fun getTransactionById(@Path("id") id: String): MidtransResponse
+
+    @POST("api/transaction/cancel/{orderId}")
+    suspend fun cancelTransaction(@Path("orderId") orderId: String): MidtransResponse
 }
-
-data class UpdateTransactionStatusRequest(
-    val payment_status: String,  // "pending", "completed", "failed", "cancelled"
-    val payment_description: String = ""
-)
-data class CreateTransactionRequest(
-    val product_id: String,
-    val payment_id: String,
-    val payment_description: String = ""
-)
