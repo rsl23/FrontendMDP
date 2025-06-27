@@ -33,6 +33,10 @@ class LoginViewModel @Inject constructor(
     var idToken by mutableStateOf("")
         private set
 
+    // Add error message state for showing toast
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage = _errorMessage.asStateFlow()
+
     private val _navigationEvent = MutableSharedFlow<String>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
@@ -45,9 +49,14 @@ class LoginViewModel @Inject constructor(
     fun onEmailChange(newEmail: String) { email = newEmail }
     fun onPasswordChange(newPassword: String) { password = newPassword }
 
+    // Function to clear error message after it's been shown
+    fun clearErrorMessage() {
+        _errorMessage.value = null
+    }
+
     fun login() {
         if (email.isBlank() || password.isBlank()) {
-            Log.e("Login", "Email or password is empty")
+            _errorMessage.value = "Email and password cannot be empty"
             return
         }
         isLoading = true
@@ -76,17 +85,19 @@ class LoginViewModel @Inject constructor(
                                     }
                                 } catch (e: Exception) {
                                     Log.e("BackendLogin", "Failed: ${e.message}")
-                                } finally {
+                                    _errorMessage.value = "Failed to authenticate: ${e.message}"
                                     isLoading = false
                                 }
                             }
                         }
                         ?.addOnFailureListener { e ->
                             Log.e("Token", "Gagal ambil token: ${e.message}")
+                            _errorMessage.value = "Failed to get authentication token"
                             isLoading = false
                         }
                 } else {
                     Log.e("Login", "Failed: ${task.exception?.message}")
+                    _errorMessage.value = task.exception?.message ?: "Authentication failed"
                     isLoading = false
                 }
             }
@@ -129,6 +140,7 @@ class LoginViewModel @Inject constructor(
     fun signInWithGoogle(idToken: String?) {
         if (idToken == null) {
             Log.e("Auth", "ID Token is null")
+            _errorMessage.value = "Google authentication failed: Missing ID token"
             return
         }
 
@@ -160,7 +172,7 @@ class LoginViewModel @Inject constructor(
                                         }
                                     } catch (e: Exception) {
                                         Log.e("Auth", "Backend error: ${e.message}")
-                                    } finally {
+                                        _errorMessage.value = "Server authentication failed: ${e.message}"
                                         isLoading = false
                                     }
                                 }
@@ -168,10 +180,12 @@ class LoginViewModel @Inject constructor(
                         }
                         ?.addOnFailureListener { e ->
                             Log.e("Auth", "Failed to get token: ${e.message}")
+                            _errorMessage.value = "Failed to get authentication token"
                             isLoading = false
                         }
                 } else {
                     Log.e("Auth", "Firebase sign-in failed: ${task.exception?.message}")
+                    _errorMessage.value = task.exception?.message ?: "Google authentication failed"
                     isLoading = false
                 }
             }
