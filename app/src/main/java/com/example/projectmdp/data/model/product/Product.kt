@@ -15,6 +15,6 @@ data class Product(
     val deleted_at: Timestamp? = null,
 
     // Additional fields for UI display (derived from user/seller data)
-    val sellerName: String = "",
-    val sellerLocation: String = ""
+//    val sellerName: String = "",
+//    val sellerLocation: String = ""
 )

@@ -28,8 +28,8 @@ class PreviewUserDashboardViewModel : UserDashboardViewModel() {
                 created_at = Timestamp.now(),
                 updated_at = Timestamp.now(),
                 deleted_at = null,
-                sellerName = "John Doe",
-                sellerLocation = "Surabaya, East Java"
+//                sellerName = "John Doe",
+//                sellerLocation = "Surabaya, East Java"
             ),
             Product(
                 product_id = "2",
@@ -41,8 +41,8 @@ class PreviewUserDashboardViewModel : UserDashboardViewModel() {
                 created_at = Timestamp.now(),
                 updated_at = Timestamp.now(),
                 deleted_at = null,
-                sellerName = "Jane Smith",
-                sellerLocation = "Jakarta, DKI Jakarta"
+//                sellerName = "Jane Smith",
+//                sellerLocation = "Jakarta, DKI Jakarta"
             ),
             Product(
                 product_id = "3",
@@ -54,8 +54,8 @@ class PreviewUserDashboardViewModel : UserDashboardViewModel() {
                 created_at = Timestamp.now(),
                 updated_at = Timestamp.now(),
                 deleted_at = null,
-                sellerName = "Bob Wilson",
-                sellerLocation = "Bandung, West Java"
+//                sellerName = "Bob Wilson",
+//                sellerLocation = "Bandung, West Java"
             ),
             Product(
                 product_id = "4",
@@ -67,11 +67,15 @@ class PreviewUserDashboardViewModel : UserDashboardViewModel() {
                 created_at = Timestamp.now(),
                 updated_at = Timestamp.now(),
                 deleted_at = null,
-                sellerName = "Alice Brown",
-                sellerLocation = "Medan, North Sumatra"
+//                sellerName = "Alice Brown",
+//                sellerLocation = "Medan, North Sumatra"
             )
         )
         userInitials = "JD"
+    }
+
+    fun setLoadingState(loading: Boolean) {
+        isLoading = loading
     }
 }
 
@@ -91,9 +95,8 @@ fun UserDashboardScreenPreview() {
 @Preview(showBackground = true, name = "Loading State")
 @Composable
 fun UserDashboardScreenLoadingPreview() {
-    val previewViewModel = PreviewUserDashboardViewModel().apply {
-        isLoading = true
-    }
+    val previewViewModel = PreviewUserDashboardViewModel()
+    previewViewModel.setLoadingState(true) // Use the public method instead of direct assignment
 
     MaterialTheme {
         UserDashboardScreen(
@@ -102,4 +105,3 @@ fun UserDashboardScreenLoadingPreview() {
         )
     }
 }
-
