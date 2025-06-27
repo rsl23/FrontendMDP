@@ -69,7 +69,7 @@ fun PublicUserProfile.toUser(): User {
 @Singleton
 class UserRepository @Inject constructor(
     private val userDao: UserDao,
-    private val userApi: UserApi
+//    private val userApi: UserApi
 ) {
 
     // Current User Profile Management (Main User yang Login)

@@ -98,7 +98,7 @@ fun TransactionEntity.toTransaction(): Transaction {
 @Singleton
 class TransactionRepository @Inject constructor(
     private val transactionDao: TransactionDao,
-    private val transactionApi: TransactionApi
+//    private val transactionApi: TransactionApi
 ) {
 
     // Create Transaction (Remote + Local Cache)
