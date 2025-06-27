@@ -19,7 +19,7 @@ open class UserDashboardViewModel @Inject constructor(
 ) : ViewModel() {
 
     open var searchQuery by mutableStateOf("")
-        protected set
+//        protected set
 
     open var products by mutableStateOf<List<Product>>(emptyList())
         protected set
@@ -40,17 +40,20 @@ open class UserDashboardViewModel @Inject constructor(
 
     open fun onSearchQueryChange(query: String) {
         searchQuery = query
+        Log.d("Search", "Query changed: $query")
         if (query.isEmpty()) {
             loadProducts()
+        } else {
+            searchProducts()
         }
     }
 
     open fun searchProducts() {
-        if (searchQuery.isBlank()) {
-            loadProducts()
-            return
-        }
-
+//        if (searchQuery.isBlank()) {
+//            loadProducts()
+//            return
+//        }
+        Log.d("Dashboard", "Mencari produk dengan query: $searchQuery")
         if (productRepository != null) {
             searchProductsWithRepository()
         } else {

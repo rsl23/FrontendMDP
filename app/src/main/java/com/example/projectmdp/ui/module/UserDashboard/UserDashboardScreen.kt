@@ -42,6 +42,7 @@ fun UserDashboardScreen(
     val userInitials = viewModel.userInitials
     val isLoading = viewModel.isLoading
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,10 +56,20 @@ fun UserDashboardScreen(
 
         // Search Bar
         SearchBar(
-            searchQuery = searchQuery,
+            searchQuery = viewModel.searchQuery,
             onSearchChange = { viewModel.onSearchQueryChange(it) },
-            onSearchSubmit = { viewModel.searchProducts() }
+            onSearchSubmit = {
+                if (viewModel.searchQuery.isBlank()) {
+                    viewModel.loadProducts()
+                } else {
+                    viewModel.searchProducts()
+                }
+            }
         )
+//        LaunchedEffect(true) {
+//            viewModel.searchQuery = "iphone"
+//            viewModel.searchProducts()
+//        }
 
         // Products List
         if (isLoading) {
