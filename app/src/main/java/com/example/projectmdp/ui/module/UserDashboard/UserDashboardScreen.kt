@@ -10,21 +10,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.outlined.Chat
+import androidx.compose.ui.res.painterResource
+import com.example.projectmdp.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.projectmdp.data.model.product.Product
+import coil.request.ImageRequest
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun UserDashboardScreen(
@@ -65,6 +70,17 @@ fun UserDashboardScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        } else if (products.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No products found",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -76,8 +92,9 @@ fun UserDashboardScreen(
                 items(products) { product ->
                     ProductCard(
                         product = product,
+                        onProductClick = { /* Navigate to product details */ },
                         onBuyClick = { viewModel.buyProduct(product) },
-                        onChatClick = { viewModel.chatWithSeller(product.user) }
+                        onChatClick = { viewModel.chatWithSeller(product.user_id) }
                     )
                 }
             }
@@ -154,74 +171,101 @@ private fun SearchBar(
 
 @Composable
 private fun ProductCard(
-    product: Product,
+    product: com.example.projectmdp.data.source.dataclass.Product,
+    onProductClick: () -> Unit,
     onBuyClick: () -> Unit,
     onChatClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("id", "ID")) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp),
+            .clickable { onProductClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
             // Product Image
-            AsyncImage(
-                model = product.image,
-                contentDescription = product.name,
+            Box(
                 modifier = Modifier
-                    .size(120.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentScale = ContentScale.Crop
-            )
-
-            // Product Details
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.SpaceBetween
+                    .fillMaxWidth()
+                    .height(180.dp)
             ) {
-                Column {
-                    Text(
-                        text = product.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(product.image)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = product.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    error = painterResource(id = R.drawable.alert_error), // Add a placeholder drawable
+                    placeholder = painterResource(id = R.drawable.landscape_placeholder) // Add a placeholder drawable
+                )
 
+                // Price Tag
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(4.dp)
+                ) {
                     Text(
-                        text = "Rp ${product.price}",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = currencyFormat.format(product.price),
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 4.dp)
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     )
+                }
+            }
 
+            // Product Info
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                product.description?.let {
                     Text(
-                        text = "Seller: ${product.sellerName}",
+                        text = it,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 2.dp)
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
+                }
 
-                    Text(
-                        text = product.sellerLocation,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                // Category Tag
+                if (product.hasCategory()) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    ) {
+                        Text(
+                            text = product.category,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
                 }
 
                 // Action Buttons
@@ -255,7 +299,7 @@ private fun ProductCard(
                         )
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Chat,
+                            painter = painterResource(id = R.drawable.chat_24px),
                             contentDescription = "Chat",
                             modifier = Modifier.size(16.dp)
                         )

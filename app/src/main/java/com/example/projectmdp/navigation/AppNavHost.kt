@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.projectmdp.ui.module.login.LoginScreen
 import com.example.projectmdp.ui.module.register.RegisterScreen
+import com.example.projectmdp.ui.module.UserDashboard.UserDashboardScreen
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -26,6 +27,12 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         composable(Routes.REGISTER) {
             // Using hiltViewModel() to properly inject dependencies
             RegisterScreen(
+                viewModel = hiltViewModel(),
+                navController = navController
+            )
+        }
+        composable(Routes.USER_DASHBOARD) {
+            UserDashboardScreen(
                 viewModel = hiltViewModel(),
                 navController = navController
             )
