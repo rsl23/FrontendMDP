@@ -104,6 +104,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun firebaseAuthWithGoogleIdToken(idToken: String) {
+        isLoading = true
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
@@ -114,10 +115,38 @@ class LoginViewModel @Inject constructor(
                             this.idToken = result.token ?: ""
                             Log.d("GoogleAuth", "ID Token: ${this.idToken}")
                             RetrofitInstance.setToken(this.idToken)
-                            // You can also call your backend login logic here, if needed
+
+                            // Call backend to verify token and navigate to dashboard
+                            viewModelScope.launch {
+                                try {
+                                    val response = authRepository.verifyToken(VerifyTokenRequest(this@LoginViewModel.idToken))
+                                    Log.d("GoogleAuth", "Backend success: $response")
+
+                                    // Check user role and navigate accordingly
+                                    val userRole = response.data?.user?.role
+                                    if (userRole?.equals("user", ignoreCase = true) == true) {
+                                        _navigationEvent.emit(Routes.USER_DASHBOARD)
+                                    } else {
+                                        // For other roles, you can add navigation to their respective screens
+                                        Log.d("Login", "User has role: $userRole")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("GoogleAuth", "Backend error: ${e.message}")
+                                    _errorMessage.value = "Server authentication failed: ${e.message}"
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        }
+                        ?.addOnFailureListener { e ->
+                            Log.e("GoogleAuth", "Failed to get token: ${e.message}")
+                            _errorMessage.value = "Failed to get authentication token"
+                            isLoading = false
                         }
                 } else {
                     Log.e("GoogleAuth", "signInWithCredential:failure", task.exception)
+                    _errorMessage.value = task.exception?.message ?: "Google authentication failed"
+                    isLoading = false
                 }
             }
     }
