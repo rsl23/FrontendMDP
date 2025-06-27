@@ -6,6 +6,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.projectmdp.data.source.local.dao.ProductDao
+import com.example.projectmdp.data.source.local.dao.TransactionDao
 import com.example.projectmdp.data.source.local.dao.UserDao
 import com.example.projectmdp.data.source.local.entity.ProductEntity
 import com.example.projectmdp.data.source.local.entity.UserEntity
@@ -14,6 +15,7 @@ import com.example.projectmdp.data.source.local.entity.UserEntity
 abstract class AppDatabase: RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun productDao(): ProductDao
+    abstract fun transactionDao(): TransactionDao
     companion object{
         @Volatile
         private var INSTANCE: AppDatabase? = null
