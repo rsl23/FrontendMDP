@@ -116,15 +116,15 @@ fun DetailsScreen(
                 style = MaterialTheme.typography.bodyMedium // Material 3 typography
             )
             Spacer(modifier = Modifier.weight(1f)) // Pushes content to the bottom
-            Text(
-                text = "Seller: ${product.sellerName}",
-                style = MaterialTheme.typography.titleMedium, // Material 3 typography
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "Location: ${product.sellerLocation}",
-                style = MaterialTheme.typography.bodyMedium // Material 3 typography
-            )
+//            Text(
+//                text = "Seller: ${product.sellerName}",
+//                style = MaterialTheme.typography.titleMedium, // Material 3 typography
+//                fontWeight = FontWeight.SemiBold
+//            )
+//            Text(
+//                text = "Location: ${product.sellerLocation}",
+//                style = MaterialTheme.typography.bodyMedium // Material 3 typography
+//            )
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

@@ -24,8 +24,8 @@ fun DetailScreenPreview() {
             "This is a dummy product for preview purposes.",
             "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/B-21_Raider_front_high.jpg/250px-B-21_Raider_front_high.jpg",
             "US001",
-            sellerName = "Dummy Seller",
-            sellerLocation = "Dummy Location"
+//            sellerName = "Dummy Seller",
+//            sellerLocation = "Dummy Location"
         )
     )
     ProjectMDPTheme { // Applies your app's theme
