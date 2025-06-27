@@ -4,18 +4,19 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.projectmdp.data.repository.ProductRepository
 import com.example.projectmdp.data.source.dataclass.Product
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.toObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
-open class UserDashboardViewModel @Inject constructor() : ViewModel() {
+open class UserDashboardViewModel @Inject constructor(
+    private val productRepository: ProductRepository? = null
+) : ViewModel() {
 
     open var searchQuery by mutableStateOf("")
         protected set
@@ -50,6 +51,37 @@ open class UserDashboardViewModel @Inject constructor() : ViewModel() {
             return
         }
 
+        if (productRepository != null) {
+            searchProductsWithRepository()
+        } else {
+            searchProductsWithFirestore()
+        }
+    }
+
+    private fun searchProductsWithRepository() {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                productRepository?.searchProducts(searchQuery)?.collectLatest { result ->
+                    result.fold(
+                        onSuccess = { searchResults ->
+                            products = searchResults
+                            Log.d("Dashboard", "Search completed: ${searchResults.size} products found")
+                        },
+                        onFailure = { error ->
+                            Log.e("Dashboard", "Search failed: ${error.message}")
+                        }
+                    )
+                    isLoading = false
+                }
+            } catch (e: Exception) {
+                Log.e("Dashboard", "Search failed: ${e.message}")
+                isLoading = false
+            }
+        }
+    }
+
+    private fun searchProductsWithFirestore() {
         viewModelScope.launch {
             isLoading = true
             try {
@@ -90,6 +122,39 @@ open class UserDashboardViewModel @Inject constructor() : ViewModel() {
     }
 
     fun loadProducts() {
+        if (productRepository != null) {
+            loadProductsWithRepository()
+        } else {
+            loadProductsWithFirestore()
+        }
+    }
+
+    private fun loadProductsWithRepository() {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                productRepository?.getAllProducts(forceRefresh = true)?.collectLatest { result ->
+                    result.fold(
+                        onSuccess = { productWithPagination ->
+                            products = productWithPagination.products
+                            Log.d("Dashboard", "Products loaded: ${products.size}")
+                        },
+                        onFailure = { error ->
+                            Log.e("Dashboard", "Failed to load products: ${error.message}")
+                            products = emptyList()
+                        }
+                    )
+                    isLoading = false
+                }
+            } catch (e: Exception) {
+                Log.e("Dashboard", "Failed to load products: ${e.message}")
+                products = emptyList()
+                isLoading = false
+            }
+        }
+    }
+
+    private fun loadProductsWithFirestore() {
         viewModelScope.launch {
             isLoading = true
             try {
@@ -140,28 +205,24 @@ open class UserDashboardViewModel @Inject constructor() : ViewModel() {
                 !displayName.isNullOrBlank() -> {
                     val names = displayName.split(" ")
                     if (names.size >= 2) {
-                        "${names[0].first().uppercaseChar()}${names[1].first().uppercaseChar()}"
+                        "${names[0][0]}${names[1][0]}".uppercase()
                     } else {
-                        names[0].take(2).uppercase()
+                        displayName.take(2).uppercase()
                     }
                 }
-                !email.isNullOrBlank() -> {
-                    email.first().uppercaseChar().toString()
-                }
+                !email.isNullOrBlank() -> email.take(2).uppercase()
                 else -> "U"
             }
         }
     }
 
-    open fun buyProduct(product: Product) {
-        // TODO: Implement buy product functionality
+    fun buyProduct(product: Product) {
+        // Implement buy functionality
         Log.d("Dashboard", "Buy product: ${product.name}")
-        // Navigate to purchase screen or show purchase dialog
     }
 
-    open fun chatWithSeller(sellerId: String) {
-        // TODO: Implement chat functionality
+    fun chatWithSeller(sellerId: String) {
+        // Implement chat functionality
         Log.d("Dashboard", "Chat with seller: $sellerId")
-        // Navigate to chat screen
     }
 }

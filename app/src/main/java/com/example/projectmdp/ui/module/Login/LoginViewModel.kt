@@ -5,7 +5,6 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectmdp.data.repository.AuthRepository
-import com.example.projectmdp.data.source.local.SessionManager
 import com.example.projectmdp.data.source.remote.RetrofitInstance
 import com.example.projectmdp.data.source.remote.VerifyTokenRequest
 import com.example.projectmdp.navigation.Routes
@@ -22,8 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val sessionManager: SessionManager
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     var email by mutableStateOf("")
         private set
@@ -71,7 +69,6 @@ class LoginViewModel @Inject constructor(
                             idToken = result.token ?: ""
                             Log.d("Token", "ID Token: $idToken")
                             RetrofitInstance.setToken(idToken)
-                            sessionManager.saveToken(idToken)
                             // Call backend login
                             viewModelScope.launch {
                                 try {
@@ -188,7 +185,7 @@ class LoginViewModel @Inject constructor(
                             if (token != null) {
                                 Log.d("Auth", "Firebase ID Token: $token")
                                 RetrofitInstance.setToken(token)
-                                sessionManager.saveToken(token)
+
                                 viewModelScope.launch {
                                     try {
                                         val response = authRepository.verifyToken(VerifyTokenRequest(token))
