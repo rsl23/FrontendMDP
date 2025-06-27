@@ -33,6 +33,10 @@ class LoginViewModel @Inject constructor(
     var idToken by mutableStateOf("")
         private set
 
+    // Add error message state for showing toast
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage = _errorMessage.asStateFlow()
+
     private val _navigationEvent = MutableSharedFlow<String>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
@@ -45,9 +49,14 @@ class LoginViewModel @Inject constructor(
     fun onEmailChange(newEmail: String) { email = newEmail }
     fun onPasswordChange(newPassword: String) { password = newPassword }
 
+    // Function to clear error message after it's been shown
+    fun clearErrorMessage() {
+        _errorMessage.value = null
+    }
+
     fun login() {
         if (email.isBlank() || password.isBlank()) {
-            Log.e("Login", "Email or password is empty")
+            _errorMessage.value = "Email and password cannot be empty"
             return
         }
         isLoading = true
@@ -76,23 +85,26 @@ class LoginViewModel @Inject constructor(
                                     }
                                 } catch (e: Exception) {
                                     Log.e("BackendLogin", "Failed: ${e.message}")
-                                } finally {
+                                    _errorMessage.value = "Failed to authenticate: ${e.message}"
                                     isLoading = false
                                 }
                             }
                         }
                         ?.addOnFailureListener { e ->
                             Log.e("Token", "Gagal ambil token: ${e.message}")
+                            _errorMessage.value = "Failed to get authentication token"
                             isLoading = false
                         }
                 } else {
                     Log.e("Login", "Failed: ${task.exception?.message}")
+                    _errorMessage.value = task.exception?.message ?: "Authentication failed"
                     isLoading = false
                 }
             }
     }
 
     fun firebaseAuthWithGoogleIdToken(idToken: String) {
+        isLoading = true
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
@@ -103,10 +115,38 @@ class LoginViewModel @Inject constructor(
                             this.idToken = result.token ?: ""
                             Log.d("GoogleAuth", "ID Token: ${this.idToken}")
                             RetrofitInstance.setToken(this.idToken)
-                            // You can also call your backend login logic here, if needed
+
+                            // Call backend to verify token and navigate to dashboard
+                            viewModelScope.launch {
+                                try {
+                                    val response = authRepository.verifyToken(VerifyTokenRequest(this@LoginViewModel.idToken))
+                                    Log.d("GoogleAuth", "Backend success: $response")
+
+                                    // Check user role and navigate accordingly
+                                    val userRole = response.data?.user?.role
+                                    if (userRole?.equals("user", ignoreCase = true) == true) {
+                                        _navigationEvent.emit(Routes.USER_DASHBOARD)
+                                    } else {
+                                        // For other roles, you can add navigation to their respective screens
+                                        Log.d("Login", "User has role: $userRole")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("GoogleAuth", "Backend error: ${e.message}")
+                                    _errorMessage.value = "Server authentication failed: ${e.message}"
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        }
+                        ?.addOnFailureListener { e ->
+                            Log.e("GoogleAuth", "Failed to get token: ${e.message}")
+                            _errorMessage.value = "Failed to get authentication token"
+                            isLoading = false
                         }
                 } else {
                     Log.e("GoogleAuth", "signInWithCredential:failure", task.exception)
+                    _errorMessage.value = task.exception?.message ?: "Google authentication failed"
+                    isLoading = false
                 }
             }
     }
@@ -129,6 +169,7 @@ class LoginViewModel @Inject constructor(
     fun signInWithGoogle(idToken: String?) {
         if (idToken == null) {
             Log.e("Auth", "ID Token is null")
+            _errorMessage.value = "Google authentication failed: Missing ID token"
             return
         }
 
@@ -160,7 +201,7 @@ class LoginViewModel @Inject constructor(
                                         }
                                     } catch (e: Exception) {
                                         Log.e("Auth", "Backend error: ${e.message}")
-                                    } finally {
+                                        _errorMessage.value = "Server authentication failed: ${e.message}"
                                         isLoading = false
                                     }
                                 }
@@ -168,10 +209,12 @@ class LoginViewModel @Inject constructor(
                         }
                         ?.addOnFailureListener { e ->
                             Log.e("Auth", "Failed to get token: ${e.message}")
+                            _errorMessage.value = "Failed to get authentication token"
                             isLoading = false
                         }
                 } else {
                     Log.e("Auth", "Firebase sign-in failed: ${task.exception?.message}")
+                    _errorMessage.value = task.exception?.message ?: "Google authentication failed"
                     isLoading = false
                 }
             }

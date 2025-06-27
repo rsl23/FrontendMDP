@@ -3,6 +3,7 @@ package com.example.projectmdp.ui.module.login
 import android.app.Activity
 import android.content.IntentSender
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,6 +41,18 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
     val email = viewModel.email
     val password = viewModel.password
     val isLoading = viewModel.isLoading
+    val context = LocalContext.current
+
+    // Collect error messages for toast notifications
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
+    // Show toast for error messages
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearErrorMessage()
+        }
+    }
 
     // Collect navigation events
     val scope = rememberCoroutineScope()
@@ -212,7 +225,6 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val context = LocalContext.current
             val activity = context as Activity
             val webClientId = "634972513606-mbo2jqteefq4teo1mlhb62ekeleh34fa.apps.googleusercontent.com" // replace with actual Web Client ID from Firebase
 
