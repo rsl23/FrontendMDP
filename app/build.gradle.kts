@@ -76,6 +76,7 @@ dependencies {
     implementation("com.squareup.moshi:moshi:1.15.2")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.2")
+    implementation(libs.firebase.auth)
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.15.0")) // Firebase BoM
@@ -87,6 +88,7 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.50")
     kapt("com.google.dagger:hilt-compiler:2.50")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0") // Hilt integration for Compose Navigation
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
     // Testing
     testImplementation(libs.junit)
@@ -96,4 +98,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }
