@@ -135,7 +135,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { viewModel.onEmailChange(it) },
+                onValueChange = { viewModel.email = it },
                 label = { Text("Email") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,7 +152,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { viewModel.onPasswordChange(it) },
+                onValueChange = { viewModel.password = it },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
@@ -170,7 +170,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = confirmPassword,
-                onValueChange = { viewModel.onConfirmPasswordChange(it) },
+                onValueChange = { viewModel.confirmPassword = it },
                 label = { Text("Confirm Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
@@ -188,7 +188,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = address,
-                onValueChange = { viewModel.onAddressChange(it) },
+                onValueChange = { viewModel.address = it },
                 label = { Text("Address") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -204,7 +204,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = { viewModel.onPhoneNumberChange(it) },
+                onValueChange = { viewModel.phoneNumber = it },
                 label = { Text("Phone Number") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -244,33 +244,6 @@ fun RegisterScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            val context = LocalContext.current
-            val activity = context as Activity
-            val webClientId = "114051112134470433010"
-
-            val oneTapClient = remember { Identity.getSignInClient(context) }
-            val launcher = rememberLauncherForActivityResult(
-                ActivityResultContracts.StartIntentSenderForResult()
-            ) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
-                    val idToken = credential.googleIdToken
-                    if (idToken != null) {
-                        // Call the existing firebaseAuthWithGoogle method
-                        viewModel.firebaseAuthWithGoogle(idToken)
-
-                        // Extract user info for registration
-                        val email = credential.id
-                        // If address and phone are required, show a dialog to collect them
-                        viewModel.onEmailChange(email)
-                    } else {
-                        Log.e("OneTap", "No ID token!")
-                    }
-                } else {
-                    Log.e("OneTap", "Sign-in failed or canceled")
-                }
-            }
 
             OutlinedButton(
                 onClick = { viewModel.onGoogleSignInClicked() },
