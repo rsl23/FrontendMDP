@@ -44,6 +44,8 @@ android {
     buildFeatures {
         compose = true
     }
+
+
 }
 
 dependencies {
@@ -100,4 +102,19 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    testImplementation("junit:junit:4.13.2")
+// Mockito untuk mocking
+    testImplementation("org.mockito:mockito-core:4.11.0")
+    testImplementation("org.mockito:mockito-inline:4.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+// Coroutines Testing
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+// Architecture Components Testing (untuk InstantTaskExecutorRule)
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+// LiveData Testing
+    testImplementation("androidx.lifecycle:lifecycle-runtime-testing:2.7.0")
+// Room Testing (jika menggunakan Room database)
+    testImplementation("androidx.room:room-testing:2.6.1")
+// Truth assertion library (optional tapi recommended)
+    testImplementation("com.google.truth:truth:1.1.4")
 }

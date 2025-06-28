@@ -41,12 +41,12 @@ fun com.example.projectmdp.data.source.response.Product.toProduct(): Product {
 @Singleton
 class ProductRepository @Inject constructor(
     private val productDao: ProductDao,
-    private val productApi: ProductApi
+//    private val productApi: ProductApi
 ) {
 
     // CRUD Operations with Remote + Local
 
-    suspend fun getAllProducts(
+    open suspend fun getAllProducts(
         page: Int = 1,
         limit: Int = 10,
         forceRefresh: Boolean = false

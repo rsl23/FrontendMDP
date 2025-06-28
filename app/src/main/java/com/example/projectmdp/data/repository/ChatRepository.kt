@@ -88,7 +88,7 @@ fun com.example.projectmdp.data.source.response.OtherUser.toChatUser(): User {
 
 @Singleton
 class ChatRepository @Inject constructor(
-    private val chatApi: ChatApi
+//    private val chatApi: ChatApi
     // Note: Chat biasanya real-time, jadi tidak perlu local storage
 ) {
 
