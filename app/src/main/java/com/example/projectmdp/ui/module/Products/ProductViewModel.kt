@@ -1,5 +1,6 @@
 package com.example.projectmdp.ui.module.Products
 
+import android.content.Context // <--- ADD THIS IMPORT
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -11,28 +12,29 @@ import com.example.projectmdp.data.repository.UserRepository
 import com.example.projectmdp.data.source.dataclass.Product
 import com.example.projectmdp.data.source.dataclass.User
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext // <--- ADD THIS IMPORT for Hilt's ApplicationContext qualifier
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ProductViewModel @Inject constructor(
-    private val productRepository: ProductRepository, // Inject the repository
+    private val productRepository: ProductRepository,
     private val userRepository: UserRepository,
-    private val  savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val applicationContext: Context // <--- INJECT APPLICATION CONTEXT HERE
 ) : ViewModel() {
     private val _products = MutableLiveData<List<Product>>()
     val products: LiveData<List<Product>> = _products
 
-    private val _selectedProduct = MutableLiveData<Product?>() // Use nullable Product
+    private val _selectedProduct = MutableLiveData<Product?>()
     val selectedProduct: LiveData<Product?> = _selectedProduct
 
     val productId: String = savedStateHandle.get<String>("productId")
-        ?: throw IllegalStateException("Product ID 'productId' is missing from SavedStateHandle. Check navigation route arguments.")
+        ?: ""
 
-    // New LiveData for the seller information
     private val _selectedProductSeller = MutableLiveData<User?>()
-    val selectedProductSeller: LiveData<User?> = _selectedProductSeller // This is what the UI observes
+    val selectedProductSeller: LiveData<User?> = _selectedProductSeller
 
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
@@ -40,39 +42,37 @@ class ProductViewModel @Inject constructor(
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
-    // LiveData for product creation success (as discussed previously)
     private val _productCreationSuccess = MutableLiveData<Boolean>()
     val productCreationSuccess: LiveData<Boolean> = _productCreationSuccess
+
     init {
-        fetchProductById(productId) // Load details for the specific product
-    }
-    fun setSelectedProduct(product: Product) {
-        _selectedProduct.value = product
-        // Automatically fetch seller information when a product is selected
-        fetchSelectedProductSeller() // Call the function to trigger the fetch
+        if (productId.isNotEmpty()) {
+            fetchProductById(productId)
+        }
     }
 
-    // Corrected function to fetch seller information
-    // It should NOT return User? directly, as the result is asynchronous.
-    // Instead, it updates the LiveData that the UI observes.
-    fun fetchSelectedProductSeller() { // Changed return type to Unit (or simply omit it)
+    fun setSelectedProduct(product: Product) {
+        _selectedProduct.value = product
+        fetchSelectedProductSeller()
+    }
+
+    fun fetchSelectedProductSeller() {
         _isLoading.value = true
-        _errorMessage.value = null // Clear previous errors
-        _selectedProductSeller.value = null // Clear previous seller data
+        _errorMessage.value = null
+        _selectedProductSeller.value = null
 
         viewModelScope.launch {
             val userId = _selectedProduct.value?.user_id
             if (userId != null) {
-                // Collect the Flow<Result<User>> and handle the result
                 userRepository.getUserById(userId).collect { result ->
-                    _isLoading.value = false // Stop loading after result is processed
+                    _isLoading.value = false
 
                     result.onSuccess { user ->
-                        _selectedProductSeller.value = user // Post the User object to LiveData
-                        _errorMessage.value = null // Clear error on success
+                        _selectedProductSeller.value = user
+                        _errorMessage.value = null
                     }.onFailure { throwable ->
                         _errorMessage.value = throwable.message ?: "Failed to load seller information."
-                        _selectedProductSeller.value = null // Clear seller on error
+                        _selectedProductSeller.value = null
                     }
                 }
             } else {
@@ -80,31 +80,28 @@ class ProductViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
-        // REMOVED: return _selectedProductSeller.value
-        // The return statement here would execute immediately, before the LiveData is updated.
     }
 
-    // This is the function to fetch a product by ID
     fun fetchProductById(productId: String) {
         _isLoading.value = true
-        _errorMessage.value = null // Clear any previous error
+        _errorMessage.value = null
 
         viewModelScope.launch {
+            // Note: productRepository.getProductById doesn't need context, only addProduct/updateProduct
             productRepository.getProductById(productId).collect { result ->
-                _isLoading.value = false // Stop loading regardless of success or failure
+                _isLoading.value = false
                 result.onSuccess { product ->
                     _selectedProduct.value = product
-                    _errorMessage.value = null // Clear error on success
-                    fetchSelectedProductSeller() // Fetch seller after product is successfully loaded
+                    _errorMessage.value = null
+                    fetchSelectedProductSeller()
                 }.onFailure { throwable ->
-                    _selectedProduct.value = null // Clear product on error
+                    _selectedProduct.value = null
                     _errorMessage.value = throwable.message ?: "Unknown error fetching product."
                 }
             }
         }
     }
 
-    // You can also add functions for other repository operations here, e.g.:
     fun fetchAllProducts(page: Int, limit: Int, forceRefresh: Boolean) {
         _isLoading.value = true
         _errorMessage.value = null
@@ -113,7 +110,6 @@ class ProductViewModel @Inject constructor(
                 _isLoading.value = false
                 result.onSuccess { productWithPagination ->
                     _products.value = productWithPagination.products
-                    // You might want to expose pagination info as well
                 }.onFailure { throwable ->
                     _errorMessage.value = throwable.message ?: "Failed to load products."
                 }
@@ -121,29 +117,41 @@ class ProductViewModel @Inject constructor(
         }
     }
 
-
+    // --- THIS IS THE CRITICAL CHANGE ---
     fun createProduct(name: String, description: String, price: Double, category: String, imageUri: Uri?) {
         _isLoading.value = true
         _errorMessage.value = null
-        _productCreationSuccess.value = false // Reset success flag before starting
+        _productCreationSuccess.value = false
 
         viewModelScope.launch {
-            productRepository.addProduct(name, description, price, category, imageUri)
-                .collect { result ->
-                    _isLoading.value = false
-                    result.onSuccess { createdProduct ->
-                        _errorMessage.value = null
-                        _productCreationSuccess.value = true // Set to true on success
-                    }.onFailure { throwable ->
-                        _errorMessage.value = throwable.message ?: "Failed to create product."
-                        _productCreationSuccess.value = false // Ensure false on failure
-                    }
+            productRepository.addProduct(
+                applicationContext, // <--- PASS THE INJECTED APPLICATION CONTEXT HERE
+                name,
+                description,
+                price,
+                category,
+                imageUri
+            ).collect { result ->
+                _isLoading.value = false
+                result.onSuccess { createdProduct ->
+                    _errorMessage.value = null
+                    _productCreationSuccess.value = true
+                }.onFailure { throwable ->
+                    _errorMessage.value = throwable.message ?: "Failed to create product."
+                    _productCreationSuccess.value = false
                 }
+            }
         }
     }
 
-    // Function to reset the creation success flag after navigation
+    // You might also need to update this if you use imageUri in updateProduct
+
     fun resetProductCreationStatus() {
         _productCreationSuccess.value = false
+    }
+
+    // Add a function to clear error messages if needed for UI control
+    fun clearErrorMessage() {
+        _errorMessage.value = null
     }
 }

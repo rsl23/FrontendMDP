@@ -1,7 +1,7 @@
 package com.example.projectmdp.ui.module.Products
 
 import android.net.Uri
-import android.widget.Toast // Ensure this import is present and correct
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -28,23 +28,24 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.projectmdp.R // Assuming you have placeholder/error drawables
+import com.example.projectmdp.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import android.content.Context // Explicitly import Context
+import android.content.Context
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.navigation.compose.currentBackStackEntryAsState // <--- ADD THIS IMPORT
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateProductScreen(
-    viewModel: ProductViewModel = viewModel(), // hiltViewModel() if using Hilt
+    viewModel: ProductViewModel = viewModel(),
     navController: NavController
 ) {
     // State for input fields
     var productName by remember { mutableStateOf("") }
     var productDescription by remember { mutableStateOf("") }
-    var productPrice by remember { mutableStateOf("") } // Keep as String for TextField input
+    var productPrice by remember { mutableStateOf("") }
     var productCategory by remember { mutableStateOf("") }
     var productImageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -53,7 +54,7 @@ fun CreateProductScreen(
     val errorMessage by viewModel.errorMessage.observeAsState()
     val productCreationSuccess by viewModel.productCreationSuccess.observeAsState()
 
-    val context: Context = LocalContext.current // Explicitly type context
+    val context: Context = LocalContext.current
 
     // Launcher for image picking
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -67,17 +68,20 @@ fun CreateProductScreen(
         if (productCreationSuccess == true) {
             Toast.makeText(context, "Product created successfully!", Toast.LENGTH_SHORT).show()
             viewModel.resetProductCreationStatus() // Reset flag to allow re-creation
+
+            // --- IMPORTANT: Set a result on the previous back stack entry ---
+            // This is how you signal to the previous screen (UserDashboardScreen) to refresh
+            navController.previousBackStackEntry?.savedStateHandle?.set("shouldRefreshDashboard", true)
+
             navController.popBackStack() // Navigate back to previous screen
         }
     }
 
     // Observe error messages
     LaunchedEffect(errorMessage) {
-        errorMessage?.let { message:String ->
-            // Explicitly cast message to CharSequence to help compiler infer type
+        errorMessage?.let { message: String ->
             Toast.makeText(context, message as CharSequence, Toast.LENGTH_LONG).show()
-            // Reset error message in ViewModel after displaying, to prevent it from showing again on recomposition
-            // You'll need a public function in your ViewModel to clear it, e.g., viewModel.clearErrorMessage()
+            viewModel.clearErrorMessage() // Clear error message after displaying
         }
     }
 

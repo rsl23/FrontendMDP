@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.res.painterResource
@@ -18,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +34,7 @@ import coil.request.ImageRequest
 import com.example.projectmdp.navigation.Routes
 import java.text.NumberFormat
 import java.util.Locale
+import androidx.navigation.compose.currentBackStackEntryAsState // <--- ADD THIS IMPORT
 
 @Composable
 fun UserDashboardScreen(
@@ -39,85 +42,121 @@ fun UserDashboardScreen(
     modifier: Modifier = Modifier,
     navController: NavController
 ) {
+    // Original state observations (assuming viewModel's mutableStateOf are properly observed)
     val searchQuery = viewModel.searchQuery
-    val products = viewModel.products
+    val products = viewModel.products // Still mutableStateListOf or mutableStateOf<List<Product>>
     val userInitials = viewModel.userInitials
     val isLoading = viewModel.isLoading
 
+    // Get the current back stack entry to observe navigation results
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-    Column(
+    // --- START: Minimal change for refresh logic ---
+    // This LaunchedEffect will run whenever navBackStackEntry changes (e.g., when you navigate back)
+    LaunchedEffect(navBackStackEntry) {
+        // Check if a "shouldRefreshDashboard" flag was set in the previous screen's SavedStateHandle
+        val shouldRefresh = navBackStackEntry?.savedStateHandle?.get<Boolean>("shouldRefreshDashboard")
+        if (shouldRefresh == true) {
+            Log.d("UserDashboard", "Received refresh signal. Reloading products...")
+            // Call the ViewModel's loadProducts function to fetch fresh data
+            viewModel.loadProducts(forceRefresh = true) // Pass true to ensure data is re-fetched from source
+            // IMPORTANT: Remove the flag to prevent it from triggering again on subsequent recompositions
+            navBackStackEntry?.savedStateHandle?.remove<Boolean>("shouldRefreshDashboard")
+        }
+    }
+    // --- END: Minimal change for refresh logic ---
+
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Top Bar with Logo and Profile
-        TopBar(
-            userInitials = userInitials,
-            onProfileClick = { /* Handle profile click */ }
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            // Top Bar with Logo and Profile
+            TopBar(
+                userInitials = userInitials,
+                onProfileClick = { /* Handle profile click */ }
+            )
 
-        // Search Bar
-        SearchBar(
-            searchQuery = viewModel.searchQuery,
-            onSearchChange = { viewModel.onSearchQueryChange(it) },
-            onSearchSubmit = {
-                if (viewModel.searchQuery.isBlank()) {
-                    viewModel.loadProducts()
-                } else {
-                    viewModel.searchProducts()
+            // Search Bar
+            SearchBar(
+                searchQuery = searchQuery,
+                onSearchChange = { viewModel.onSearchQueryChange(it) },
+                onSearchSubmit = {
+                    if (searchQuery.isBlank()) {
+                        viewModel.loadProducts(forceRefresh = true) // Force refresh on blank search submit
+                    } else {
+                        viewModel.searchProducts()
+                    }
                 }
-            }
-        )
-//        LaunchedEffect(true) {
-//            viewModel.searchQuery = "iphone"
-//            viewModel.searchProducts()
-//        }
+            )
 
-        // Products List
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        } else if (products.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No products found",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
-            ) {
-                items(products) { product ->
-                    ProductCard(
-                        product = product,
-                        onProductClick = {
-                            val routeToNavigate = Routes.productDetailRoute(product.product_id)
-                            Log.d("NavigationDebug", "Attempting to navigate to: $routeToNavigate")
-                            navController.navigate(routeToNavigate)
-                        },
-                        onBuyClick = { viewModel.buyProduct(product) },
-                        onChatClick = { viewModel.chatWithSeller(product.user_id) }
+            // Products List
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
                     )
+                }
+            } else if (products.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No products found",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(vertical = 16.dp)
+                ) {
+                    items(products) { product ->
+                        ProductCard(
+                            product = product,
+                            onProductClick = {
+                                val routeToNavigate = Routes.productDetailRoute(product.product_id)
+                                Log.d("NavigationDebug", "Attempting to navigate to: $routeToNavigate")
+                                navController.navigate(routeToNavigate)
+                            },
+                            onBuyClick = { viewModel.buyProduct(product) },
+                            onChatClick = { viewModel.chatWithSeller(product.user_id) }
+                        )
+                    }
                 }
             }
         }
+
+        // Floating Action Button
+        FloatingActionButton(
+            onClick = { navController.navigate(Routes.ADD_PRODUCT) },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            containerColor = MaterialTheme.colorScheme.primary
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add Product",
+                tint = Color.White
+            )
+        }
     }
 }
+
 
 @Composable
 private fun TopBar(

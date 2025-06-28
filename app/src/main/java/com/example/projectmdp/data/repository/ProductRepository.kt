@@ -1,6 +1,8 @@
 package com.example.projectmdp.data.repository
 
+import android.content.Context // Added import for Context
 import android.net.Uri
+import android.provider.OpenableColumns // Added import for OpenableColumns
 import android.util.Log
 import com.example.projectmdp.data.source.dataclass.Product
 import com.example.projectmdp.data.source.local.dao.ProductDao
@@ -15,6 +17,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import java.io.FileOutputStream // Added import for FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,7 +47,40 @@ class ProductRepository @Inject constructor(
     private val productDao: ProductDao,
 //    private val productApi: ProductApi
 ) {
+    private fun createTempFileFromUri(context: Context, uri: Uri): File? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            // Use a unique name for the temp file to avoid collisions and make it recognizable
+            val fileName = getFileName(context, uri)
+            val tempFile = File(context.cacheDir, "upload_product_${System.currentTimeMillis()}_${fileName ?: "image"}")
+            inputStream?.use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            tempFile
+        } catch (e: Exception) {
+            Log.e("FileUtil", "Error creating temp file from URI: ${e.message}", e)
+            null
+        }
+    }
 
+    private fun getFileName(context: Context, uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex != -1 && cursor.moveToFirst()) {
+                    result = cursor.getString(nameIndex)
+                }
+            }
+        }
+        // Fallback to last path segment if content resolver fails or it's a file URI
+        if (result == null) {
+            result = uri.lastPathSegment
+        }
+        return result
+    }
     // CRUD Operations with Remote + Local
 
     open suspend fun getAllProducts(
@@ -74,14 +110,14 @@ class ProductRepository @Inject constructor(
             if (response.isSuccess()) {
                 response.data?.let { responseData ->
                     val products = responseData.products.map { it.toProduct() }
-                    
+
                     // Cache to local database
                     val productEntities = products.map { it.toProductEntity() }
                     if (page == 1) {
                         productDao.clearAllProducts() // Clear cache for first page
                     }
                     productDao.insertAll(productEntities)
-                    
+
                     val productWithPagination = ProductWithPagination(products, responseData.pagination)
                     emit(Result.success(productWithPagination))
                 } ?: emit(Result.failure(Exception("No data received")))
@@ -144,47 +180,63 @@ class ProductRepository @Inject constructor(
     }
 
     suspend fun addProduct(
+        context: Context, // Required for Uri processing
         name: String,
         description: String,
         price: Double,
         category: String,
         imageUri: Uri?
     ): Flow<Result<Product>> = flow {
+        // Declare tempFile here so it's accessible in finally block
+        var tempFile: File? = null
+
         try {
             val nameBody = name.toRequestBody("text/plain".toMediaTypeOrNull())
             val descriptionBody = description.toRequestBody("text/plain".toMediaTypeOrNull())
             val priceBody = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val categoryBody = category.toRequestBody("text/plain".toMediaTypeOrNull())
-            
+
             var imagePart: MultipartBody.Part? = null
             imageUri?.let { uri ->
-                val file = File(uri.path ?: "")
-                if (file.exists()) {
-                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-                    imagePart = MultipartBody.Part.createFormData("image", file.name, requestFile)
+                // Call the private helper function
+                tempFile = createTempFileFromUri(context, uri)
+
+                if (tempFile != null && tempFile!!.exists()) { // Use !! after null check
+                    val requestFile = tempFile!!.asRequestBody("image/*".toMediaTypeOrNull())
+                    val fileName = getFileName(context, uri) ?: "product_image.jpg"
+                    imagePart = MultipartBody.Part.createFormData("image", fileName, requestFile)
+                } else {
+                    emit(Result.failure(Exception("Failed to prepare image file for upload. Please try again.")))
+                    return@flow // Exit flow early if file cannot be prepared
                 }
             }
 
             val response = RetrofitInstance.Productapi.addProduct(
                 nameBody, descriptionBody, priceBody, categoryBody, imagePart
             )
-            
+
             if (response.isSuccess()) {
                 response.data?.let { responseData ->
                     val product = responseData.product.toProduct()
-                    
+
                     // Cache to local
                     productDao.insert(product.toProductEntity())
-                    
+
                     emit(Result.success(product))
-                } ?: emit(Result.failure(Exception("Failed to create product")))
+                } ?: emit(Result.failure(Exception("Failed to create product: No product data received from backend.")))
             } else {
-                emit(Result.failure(Exception(response.error ?: "Failed to create product")))
+                emit(Result.failure(Exception(response.error ?: "Failed to create product: Unknown backend error.")))
             }
         } catch (e: Exception) {
+            Log.e("ProductRepository", "Error adding product: ${e.message}", e)
             emit(Result.failure(e))
+        } finally {
+            // Ensure temporary file is deleted whether success or failure
+            tempFile?.delete()
         }
     }
+
+
 
     suspend fun updateProduct(
         id: String,

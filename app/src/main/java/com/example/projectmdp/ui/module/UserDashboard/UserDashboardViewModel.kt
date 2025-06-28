@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import com.example.projectmdp.data.repository.ProductRepository
 import com.example.projectmdp.data.source.dataclass.Product
 import com.google.firebase.auth.FirebaseAuth
@@ -16,188 +15,111 @@ import javax.inject.Inject
 
 @HiltViewModel
 open class UserDashboardViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository // Ensure this is correctly injected
 ) : ViewModel() {
 
-    open var searchQuery by mutableStateOf("")
-//        protected set
+    // Using mutableStateOf for properties directly observed by Compose UI
+    // The `by` delegate automatically creates a State object.
+    var searchQuery by mutableStateOf("")
+        private set // Set to private set so only ViewModel can change directly
 
-    open var products by mutableStateOf<List<Product>>(emptyList())
-        protected set
+    var products by mutableStateOf<List<Product>>(emptyList())
+        private set // Set to private set
 
     var isLoading by mutableStateOf(false)
-        protected set
+        private set
 
-    open var userInitials by mutableStateOf("U")
-        protected set
+    var userInitials by mutableStateOf("U")
+        private set
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    // FirebaseFirestore is directly used here for initials, which is fine
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
     init {
         loadUserInitials()
-        loadProducts()
+        loadProducts(forceRefresh = true) // Load products initially when ViewModel is created
     }
 
-    open fun onSearchQueryChange(query: String) {
+    fun onSearchQueryChange(query: String) { // Made fun from open fun
         searchQuery = query
-        Log.d("Search", "Query changed: $query")
+        Log.d("UserDashboardViewModel", "Query changed: $query")
         if (query.isEmpty()) {
-            loadProducts()
+            loadProducts(forceRefresh = true) // Load all products when search is cleared
         } else {
             searchProducts()
         }
     }
 
-    open fun searchProducts() {
-//        if (searchQuery.isBlank()) {
-//            loadProducts()
-//            return
-//        }
-        Log.d("Dashboard", "Mencari produk dengan query: $searchQuery")
-        if (productRepository != null) {
-            searchProductsWithRepository()
-        } else {
-//            searchProductsWithFirestore()
+    fun searchProducts() { // Made fun from open fun
+        if (searchQuery.isBlank()) {
+            loadProducts(forceRefresh = true) // If search query is blank, just load all
+            return
         }
+        Log.d("UserDashboardViewModel", "Searching for products with query: $searchQuery")
+        // No need for 'if (productRepository != null)' because it's @Inject and non-nullable
+        searchProductsWithRepository()
     }
 
     private fun searchProductsWithRepository() {
         viewModelScope.launch {
             isLoading = true
             try {
-                productRepository?.searchProducts(searchQuery)?.collectLatest { result ->
+                // Ensure productRepository?.searchProducts returns Flow<Result<List<Product>>>
+                // and you collect it.
+                productRepository.searchProducts(searchQuery).collectLatest { result ->
                     result.fold(
                         onSuccess = { searchResults ->
-                            products = searchResults
-                            Log.d("Dashboard", "Search completed: ${searchResults.size} products found")
+                            products = searchResults // Update mutableStateOf directly
+                            Log.d("UserDashboardViewModel", "Search completed: ${searchResults.size} products found")
                         },
                         onFailure = { error ->
-                            Log.e("Dashboard", "Search failed: ${error.message}")
+                            Log.e("UserDashboardViewModel", "Search failed: ${error.message}", error)
+                            // You might want to show this error in the UI
+                            products = emptyList() // Clear products on error
                         }
                     )
                     isLoading = false
                 }
             } catch (e: Exception) {
-                Log.e("Dashboard", "Search failed: ${e.message}")
+                Log.e("UserDashboardViewModel", "Search failed with exception: ${e.message}", e)
+                products = emptyList() // Clear products on exception
                 isLoading = false
             }
         }
     }
 
-//    private fun searchProductsWithFirestore() {
-//        viewModelScope.launch {
-//            isLoading = true
-//            try {
-//                val querySnapshot = firestore.collection("products")
-//                    .whereGreaterThanOrEqualTo("name", searchQuery)
-//                    .whereLessThanOrEqualTo("name", searchQuery + '\uf8ff')
-//                    .get()
-//                    .await()
-//
-//                val searchResults = mutableListOf<Product>()
-//                for (document in querySnapshot.documents) {
-//                    // Convert Firestore document to the new Product class structure
-//                    val data = document.data
-//                    if (data != null) {
-//                        val product = Product(
-//                            product_id = document.id,
-//                            name = data["name"] as? String ?: "",
-//                            price = (data["price"] as? Number)?.toDouble() ?: 0.0,
-//                            description = data["description"] as? String,
-//                            category = data["category"] as? String ?: "",
-//                            image = data["image"] as? String ?: "",
-//                            user_id = data["user"] as? String ?: "",
-//                            created_at = (data["created_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString() ?: "",
-//                            deleted_at = (data["deleted_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString()
-//                        )
-//                        searchResults.add(product)
-//                    }
-//                }
-//
-//                products = searchResults
-//                Log.d("Dashboard", "Search completed: ${searchResults.size} products found")
-//            } catch (e: Exception) {
-//                Log.e("Dashboard", "Search failed: ${e.message}")
-//            } finally {
-//                isLoading = false
-//            }
-//        }
-//    }
-
-    fun loadProducts() {
-        if (productRepository != null) {
-            loadProductsWithRepository()
-        } else {
-//            loadProductsWithFirestore()
-        }
+    // Main function to load products, now accepts forceRefresh
+    fun loadProducts(forceRefresh: Boolean = false) { // Made fun from open fun, added forceRefresh
+        Log.d("UserDashboardViewModel", "Loading products (forceRefresh: $forceRefresh)")
+        loadProductsWithRepository(forceRefresh) // Pass forceRefresh to the repository call
     }
 
-    private fun loadProductsWithRepository() {
+    private fun loadProductsWithRepository(forceRefresh: Boolean) {
         viewModelScope.launch {
             isLoading = true
             try {
-                productRepository?.getAllProducts(forceRefresh = true)?.collectLatest { result ->
+                // Ensure productRepository?.getAllProducts returns Flow<Result<ProductWithPagination>>
+                productRepository.getAllProducts(forceRefresh = forceRefresh).collectLatest { result ->
                     result.fold(
                         onSuccess = { productWithPagination ->
-                            products = productWithPagination.products
-                            Log.d("Dashboard", "Products loaded: ${products.size}")
+                            products = productWithPagination.products // Update mutableStateOf directly
+                            Log.d("UserDashboardViewModel", "Products loaded: ${products.size}")
                         },
                         onFailure = { error ->
-                            Log.e("Dashboard", "Failed to load products: ${error.message}")
-                            products = emptyList()
+                            Log.e("UserDashboardViewModel", "Failed to load products: ${error.message}", error)
+                            products = emptyList() // Clear products on error
                         }
                     )
                     isLoading = false
                 }
             } catch (e: Exception) {
-                Log.e("Dashboard", "Failed to load products: ${e.message}")
+                Log.e("UserDashboardViewModel", "Failed to load products with exception: ${e.message}", e)
                 products = emptyList()
                 isLoading = false
             }
         }
     }
-
-//    private fun loadProductsWithFirestore() {
-//        viewModelScope.launch {
-//            isLoading = true
-//            try {
-//                val querySnapshot = firestore.collection("products")
-//                    .limit(50)
-//                    .get()
-//                    .await()
-//
-//                val productList = mutableListOf<Product>()
-//                for (document in querySnapshot.documents) {
-//                    // Convert Firestore document to the new Product class structure
-//                    val data = document.data
-//                    if (data != null) {
-//                        val product = Product(
-//                            product_id = document.id,
-//                            name = data["name"] as? String ?: "",
-//                            price = (data["price"] as? Number)?.toDouble() ?: 0.0,
-//                            description = data["description"] as? String,
-//                            category = data["category"] as? String ?: "",
-//                            image = data["image"] as? String ?: "",
-//                            user_id = data["user"] as? String ?: "",
-//                            created_at = (data["created_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString() ?: "",
-//                            deleted_at = (data["deleted_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString()
-//                        )
-//                        productList.add(product)
-//                    }
-//                }
-//
-//                products = productList
-//                Log.d("Dashboard", "Products loaded: ${productList.size}")
-//            } catch (e: Exception) {
-//                Log.e("Dashboard", "Failed to load products: ${e.message}")
-//                // Just show an empty list instead of sample data
-//                products = emptyList()
-//            } finally {
-//                isLoading = false
-//            }
-//        }
-//    }
 
     private fun loadUserInitials() {
         val currentUser = auth.currentUser
@@ -221,13 +143,12 @@ open class UserDashboardViewModel @Inject constructor(
     }
 
     fun buyProduct(product: Product) {
-        // Implement buy functionality
-        Log.d("Dashboard", "Buy product: ${product.name}")
+        Log.d("UserDashboardViewModel", "Buy product: ${product.name}")
+        // Implement your buy logic
     }
 
     fun chatWithSeller(sellerId: String) {
-        // Implement chat functionality
-        Log.d("Dashboard", "Chat with seller: $sellerId")
+        Log.d("UserDashboardViewModel", "Chat with seller: $sellerId")
+        // Implement your chat logic
     }
-
 }
