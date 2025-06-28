@@ -117,4 +117,10 @@ dependencies {
     testImplementation("androidx.room:room-testing:2.6.1")
 // Truth assertion library (optional tapi recommended)
     testImplementation("com.google.truth:truth:1.1.4")
+
+    // Di build.gradle.kts - untuk WebView jika butuh embedded payment
+    implementation("androidx.webkit:webkit:1.8.0")
+
+    // Untuk handle deep links dari Midtrans callback
+    implementation("androidx.browser:browser:1.7.0")
 }

@@ -11,7 +11,17 @@ data class Transaction(
     val payment_id: String?,
     val payment_status: String, // "pending", "completed", "cancelled", "refunded"
     val payment_description: String?,
-    val user_role: String? = null // "buyer" or "seller" - hanya ada di response getTransactionById
+    val user_role: String? = null, // "buyer" or "seller" - hanya ada di response getTransactionById
+
+    // === Tambahan Midtrans Fields ===
+    val midtrans_order_id: String? = null,
+    val snap_token: String? = null,
+    val redirect_url: String? = null,
+    val payment_type: String? = null,
+    val va_number: String? = null,
+    val pdf_url: String? = null,
+    val settlement_time: String? = null,
+    val expiry_time: String? = null
 )
 
 data class UserSeller(
@@ -39,7 +49,9 @@ data class CreateTransactionResponse(
 )
 
 data class CreateTransactionData(
-    val transaction: Transaction
+    val transaction: Transaction,
+    val snap_token: String,
+    val redirect_url: String
 )
 
 data class GetMyTransactionsResponse(
