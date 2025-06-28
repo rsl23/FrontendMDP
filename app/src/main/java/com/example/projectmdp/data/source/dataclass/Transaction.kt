@@ -15,7 +15,17 @@ data class Transaction(
     val payment_id: String?,
     val payment_status: String,
     val payment_description: String?,
-    val user_role: String? = null
+    val user_role: String? = null,
+
+    // Tambahan Midtrans Fields
+    val midtrans_order_id: String? = null,
+    val snap_token: String? = null,
+    val redirect_url: String? = null,
+    val payment_type: String? = null,
+    val va_number: String? = null,
+    val pdf_url: String? = null,
+    val settlement_time: String? = null,
+    val expiry_time: String? = null
 ): Parcelable {
 
     companion object {
@@ -30,9 +40,27 @@ data class Transaction(
             payment_id = null,
             payment_status = "pending",
             payment_description = null,
-            user_role = null
+            user_role = null,
+            midtrans_order_id = null,
+            snap_token = null,
+            redirect_url = null,
+            payment_type = null,
+            va_number = null,
+            pdf_url = null,
+            settlement_time = null,
+            expiry_time = null
         )
     }
+
+    //helper untuk midtrans
+    fun hasMidtransToken() = !snap_token.isNullOrEmpty()
+    fun hasRedirectUrl() = !redirect_url.isNullOrEmpty()
+    fun hasVirtualAccount() = !va_number.isNullOrEmpty()
+    fun hasPdfUrl() = !pdf_url.isNullOrEmpty()
+    fun isExpired() = expiry_time?.let {
+        // Implementasi check expiry time
+        System.currentTimeMillis() > it.toLongOrNull() ?: 0L
+    } ?: false
 
     // Helper methods
     fun isPending() = payment_status == "pending"

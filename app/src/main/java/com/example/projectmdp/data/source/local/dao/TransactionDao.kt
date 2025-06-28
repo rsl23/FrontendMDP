@@ -110,4 +110,30 @@ interface TransactionDao {
     
     @Query("SELECT SUM(total_price) FROM transactions WHERE user_seller_id = :sellerId AND payment_status = 'completed'")
     suspend fun getSellerTotalEarned(sellerId: String): Double?
+
+
+    //Tambahan Query untuk Midtrans
+    @Query("UPDATE transactions SET snap_token = :snapToken, redirect_url = :redirectUrl, midtrans_order_id = :orderId WHERE transaction_id = :transactionId")
+    suspend fun updateMidtransData(
+        transactionId: String,
+        snapToken: String,
+        redirectUrl: String,
+        orderId: String
+    )
+
+    @Query("UPDATE transactions SET payment_type = :paymentType, va_number = :vaNumber WHERE transaction_id = :transactionId")
+    suspend fun updatePaymentMethod(
+        transactionId: String,
+        paymentType: String,
+        vaNumber: String?
+    )
+
+    @Query("UPDATE transactions SET settlement_time = :settlementTime, payment_status = 'completed' WHERE midtrans_order_id = :orderId")
+    suspend fun updateSettlement(orderId: String, settlementTime: String)
+
+    @Query("SELECT * FROM transactions WHERE snap_token IS NOT NULL AND payment_status = 'pending'")
+    suspend fun getPendingMidtransTransactions(): List<TransactionEntity>
+
+    @Query("SELECT * FROM transactions WHERE expiry_time < :currentTime AND payment_status = 'pending'")
+    suspend fun getExpiredTransactions(currentTime: String): List<TransactionEntity>
 }

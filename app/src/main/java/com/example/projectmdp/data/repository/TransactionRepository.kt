@@ -23,6 +23,12 @@ data class TransactionDetails(
     val product: Product?
 )
 
+data class CreateTransactionResult(
+    val transaction: Transaction,
+    val snapToken: String,
+    val redirectUrl: String
+)
+
 // Extension functions untuk mapping
 fun com.example.projectmdp.data.source.response.Transaction.toTransaction(): Transaction {
     return Transaction(
@@ -34,7 +40,7 @@ fun com.example.projectmdp.data.source.response.Transaction.toTransaction(): Tra
             phone_number = this.user_seller.phone ?: "",
             profile_picture = this.user_seller.profile_picture,
             address = "",
-            role = "seller",
+            role = "both",
             firebase_uid = null,
             auth_provider = "local",
             created_at = "",
@@ -58,7 +64,17 @@ fun com.example.projectmdp.data.source.response.Transaction.toTransaction(): Tra
         payment_id = this.payment_id,
         payment_status = this.payment_status,
         payment_description = this.payment_description,
-        user_role = this.user_role
+        user_role = this.user_role,
+
+        // === Mapping Midtrans Fields ===
+        midtrans_order_id = this.midtrans_order_id,
+        snap_token = this.snap_token,
+        redirect_url = this.redirect_url,
+        payment_type = this.payment_type,
+        va_number = this.va_number,
+        pdf_url = this.pdf_url,
+        settlement_time = this.settlement_time,
+        expiry_time = this.expiry_time
     )
 }
 
@@ -74,6 +90,17 @@ fun com.example.projectmdp.data.source.response.Transaction.toTransactionEntity(
         payment_id = this.payment_id,
         payment_status = this.payment_status,
         payment_description = this.payment_description,
+
+        // Mapping Midtrans Fields
+        midtrans_order_id = this.midtrans_order_id,
+        snap_token = this.snap_token,
+        redirect_url = this.redirect_url,
+        payment_type = this.payment_type,
+        va_number = this.va_number,
+        pdf_url = this.pdf_url,
+        settlement_time = this.settlement_time,
+        expiry_time = this.expiry_time,
+
         lastUpdated = System.currentTimeMillis(),
         isSynced = true
     )
@@ -91,7 +118,17 @@ fun TransactionEntity.toTransaction(): Transaction {
         payment_id = this.payment_id,
         payment_status = this.payment_status,
         payment_description = this.payment_description,
-        user_role = null
+        user_role = null,
+
+        // === Mapping Midtrans Fields ===
+        midtrans_order_id = this.midtrans_order_id,
+        snap_token = this.snap_token,
+        redirect_url = this.redirect_url,
+        payment_type = this.payment_type,
+        va_number = this.va_number,
+        pdf_url = this.pdf_url,
+        settlement_time = this.settlement_time,
+        expiry_time = this.expiry_time
     )
 }
 
@@ -106,7 +143,7 @@ class TransactionRepository @Inject constructor(
         productId: String,
         paymentId: String,
         paymentDescription: String = ""
-    ): Flow<Result<Transaction>> = flow {
+    ): Flow<Result<CreateTransactionResult>> = flow {
         try {
             val request = CreateTransactionRequest(productId, paymentId, paymentDescription)
             val response = RetrofitInstance.Transactionapi.createTransaction(request)
@@ -118,11 +155,23 @@ class TransactionRepository @Inject constructor(
                     // Cache to local database
                     val transactionEntity = responseData.transaction.toTransactionEntity()
                     transactionDao.insertTransaction(transactionEntity)
-                    
+
+                    val result = CreateTransactionResult(
+                        transaction = transaction,
+                        snapToken = responseData.snap_token,
+                        redirectUrl = responseData.redirect_url
+                    )
+
+//                    data class CreateTransactionData(
+//                        val transaction: com.example.projectmdp.data.source.response.Transaction,
+//                        val snap_token: String,
+//                        val redirect_url: String
+//                    )
+
                     // Cache related user and product data
                     cacheRelatedData(responseData.transaction)
                     
-                    emit(Result.success(transaction))
+                    emit(Result.success(result))
                 } ?: emit(Result.failure(Exception("No transaction data received")))
             } else {
                 emit(Result.failure(Exception(response.error ?: "Failed to create transaction")))
