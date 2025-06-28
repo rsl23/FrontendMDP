@@ -1,6 +1,7 @@
 package com.example.projectmdp.data.repository
 
 import android.net.Uri
+import android.util.Log
 import com.example.projectmdp.data.source.dataclass.Product
 import com.example.projectmdp.data.source.local.dao.ProductDao
 import com.example.projectmdp.data.source.remote.ProductApi
@@ -245,45 +246,42 @@ class ProductRepository @Inject constructor(
     }
 
     suspend fun searchProducts(name: String): Flow<Result<List<Product>>> = flow {
-        try {
-            // Search in cache first
-            val cachedResults = productDao.searchProductsByName(name).map { Product.fromProductEntity(it) }
-            if (cachedResults.isNotEmpty()) {
-                emit(Result.success(cachedResults))
-            }
+        emit(Result.success(emptyList())) // Untuk menunjukkan loading
 
-            // Search in remote
+        // Coba search cache dulu
+        val cachedResults = productDao.searchProductsByName(name).map { Product.fromProductEntity(it) }
+        if (cachedResults.isNotEmpty()) {
+            emit(Result.success(cachedResults)) // Pertama: tampilkan cache
+        }
+        Log.d("SearchDebug", "Searching for: $name")
+        Log.d("SearchDebug", "Cached: ${cachedResults.size}")
+        try {
+            // Coba fetch dari remote
             val response = RetrofitInstance.Productapi.getProductByName(name)
             if (response.isSuccess()) {
                 response.data?.let { responseData ->
                     val products = responseData.product.map { it.toProduct() }
-                    
-                    // Cache search results
-                    val productEntities = products.map { it.toProductEntity() }
-                    productDao.insertAll(productEntities)
-                    
-                    emit(Result.success(products))
+
+                    // Cache remote result
+                    productDao.insertAll(products.map { it.toProductEntity() })
+
+                    Log.d("SearchDebug", "Remote success: ${products.size}")
+                    emit(Result.success(products)) // Kedua: update dengan hasil terbaru
                 } ?: emit(Result.failure(Exception("No products found")))
             } else {
-                // Return cached results if remote fails
+                // Kalau API gagal dan tidak ada cache
                 if (cachedResults.isEmpty()) {
                     emit(Result.failure(Exception(response.error ?: "No products found")))
                 }
             }
         } catch (e: Exception) {
-            // Return cached results on error
-            try {
-                val cachedResults = productDao.searchProductsByName(name).map { Product.fromProductEntity(it) }
-                if (cachedResults.isNotEmpty()) {
-                    emit(Result.success(cachedResults))
-                } else {
-                    emit(Result.failure(e))
-                }
-            } catch (cacheError: Exception) {
+            if (cachedResults.isEmpty()) {
                 emit(Result.failure(e))
             }
+            // Kalau error, dan cache sudah ditampilkan sebelumnya → tidak perlu emit error lagi
         }
     }
+
 
     // Local-only operations for offline support
     fun getAllProductsLocal(): Flow<List<Product>> {

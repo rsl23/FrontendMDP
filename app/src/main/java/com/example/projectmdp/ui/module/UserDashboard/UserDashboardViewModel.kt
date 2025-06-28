@@ -15,11 +15,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 open class UserDashboardViewModel @Inject constructor(
-    private val productRepository: ProductRepository? = null
+    private val productRepository: ProductRepository
 ) : ViewModel() {
 
     open var searchQuery by mutableStateOf("")
-        protected set
+//        protected set
 
     open var products by mutableStateOf<List<Product>>(emptyList())
         protected set
@@ -40,21 +40,24 @@ open class UserDashboardViewModel @Inject constructor(
 
     open fun onSearchQueryChange(query: String) {
         searchQuery = query
+        Log.d("Search", "Query changed: $query")
         if (query.isEmpty()) {
             loadProducts()
+        } else {
+            searchProducts()
         }
     }
 
     open fun searchProducts() {
-        if (searchQuery.isBlank()) {
-            loadProducts()
-            return
-        }
-
+//        if (searchQuery.isBlank()) {
+//            loadProducts()
+//            return
+//        }
+        Log.d("Dashboard", "Mencari produk dengan query: $searchQuery")
         if (productRepository != null) {
             searchProductsWithRepository()
         } else {
-            searchProductsWithFirestore()
+//            searchProductsWithFirestore()
         }
     }
 
@@ -81,51 +84,51 @@ open class UserDashboardViewModel @Inject constructor(
         }
     }
 
-    private fun searchProductsWithFirestore() {
-        viewModelScope.launch {
-            isLoading = true
-            try {
-                val querySnapshot = firestore.collection("products")
-                    .whereGreaterThanOrEqualTo("name", searchQuery)
-                    .whereLessThanOrEqualTo("name", searchQuery + '\uf8ff')
-                    .get()
-                    .await()
-
-                val searchResults = mutableListOf<Product>()
-                for (document in querySnapshot.documents) {
-                    // Convert Firestore document to the new Product class structure
-                    val data = document.data
-                    if (data != null) {
-                        val product = Product(
-                            product_id = document.id,
-                            name = data["name"] as? String ?: "",
-                            price = (data["price"] as? Number)?.toDouble() ?: 0.0,
-                            description = data["description"] as? String,
-                            category = data["category"] as? String ?: "",
-                            image = data["image"] as? String ?: "",
-                            user_id = data["user"] as? String ?: "",
-                            created_at = (data["created_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString() ?: "",
-                            deleted_at = (data["deleted_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString()
-                        )
-                        searchResults.add(product)
-                    }
-                }
-
-                products = searchResults
-                Log.d("Dashboard", "Search completed: ${searchResults.size} products found")
-            } catch (e: Exception) {
-                Log.e("Dashboard", "Search failed: ${e.message}")
-            } finally {
-                isLoading = false
-            }
-        }
-    }
+//    private fun searchProductsWithFirestore() {
+//        viewModelScope.launch {
+//            isLoading = true
+//            try {
+//                val querySnapshot = firestore.collection("products")
+//                    .whereGreaterThanOrEqualTo("name", searchQuery)
+//                    .whereLessThanOrEqualTo("name", searchQuery + '\uf8ff')
+//                    .get()
+//                    .await()
+//
+//                val searchResults = mutableListOf<Product>()
+//                for (document in querySnapshot.documents) {
+//                    // Convert Firestore document to the new Product class structure
+//                    val data = document.data
+//                    if (data != null) {
+//                        val product = Product(
+//                            product_id = document.id,
+//                            name = data["name"] as? String ?: "",
+//                            price = (data["price"] as? Number)?.toDouble() ?: 0.0,
+//                            description = data["description"] as? String,
+//                            category = data["category"] as? String ?: "",
+//                            image = data["image"] as? String ?: "",
+//                            user_id = data["user"] as? String ?: "",
+//                            created_at = (data["created_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString() ?: "",
+//                            deleted_at = (data["deleted_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString()
+//                        )
+//                        searchResults.add(product)
+//                    }
+//                }
+//
+//                products = searchResults
+//                Log.d("Dashboard", "Search completed: ${searchResults.size} products found")
+//            } catch (e: Exception) {
+//                Log.e("Dashboard", "Search failed: ${e.message}")
+//            } finally {
+//                isLoading = false
+//            }
+//        }
+//    }
 
     fun loadProducts() {
         if (productRepository != null) {
             loadProductsWithRepository()
         } else {
-            loadProductsWithFirestore()
+//            loadProductsWithFirestore()
         }
     }
 
@@ -154,46 +157,46 @@ open class UserDashboardViewModel @Inject constructor(
         }
     }
 
-    private fun loadProductsWithFirestore() {
-        viewModelScope.launch {
-            isLoading = true
-            try {
-                val querySnapshot = firestore.collection("products")
-                    .limit(50)
-                    .get()
-                    .await()
-
-                val productList = mutableListOf<Product>()
-                for (document in querySnapshot.documents) {
-                    // Convert Firestore document to the new Product class structure
-                    val data = document.data
-                    if (data != null) {
-                        val product = Product(
-                            product_id = document.id,
-                            name = data["name"] as? String ?: "",
-                            price = (data["price"] as? Number)?.toDouble() ?: 0.0,
-                            description = data["description"] as? String,
-                            category = data["category"] as? String ?: "",
-                            image = data["image"] as? String ?: "",
-                            user_id = data["user"] as? String ?: "",
-                            created_at = (data["created_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString() ?: "",
-                            deleted_at = (data["deleted_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString()
-                        )
-                        productList.add(product)
-                    }
-                }
-
-                products = productList
-                Log.d("Dashboard", "Products loaded: ${productList.size}")
-            } catch (e: Exception) {
-                Log.e("Dashboard", "Failed to load products: ${e.message}")
-                // Just show an empty list instead of sample data
-                products = emptyList()
-            } finally {
-                isLoading = false
-            }
-        }
-    }
+//    private fun loadProductsWithFirestore() {
+//        viewModelScope.launch {
+//            isLoading = true
+//            try {
+//                val querySnapshot = firestore.collection("products")
+//                    .limit(50)
+//                    .get()
+//                    .await()
+//
+//                val productList = mutableListOf<Product>()
+//                for (document in querySnapshot.documents) {
+//                    // Convert Firestore document to the new Product class structure
+//                    val data = document.data
+//                    if (data != null) {
+//                        val product = Product(
+//                            product_id = document.id,
+//                            name = data["name"] as? String ?: "",
+//                            price = (data["price"] as? Number)?.toDouble() ?: 0.0,
+//                            description = data["description"] as? String,
+//                            category = data["category"] as? String ?: "",
+//                            image = data["image"] as? String ?: "",
+//                            user_id = data["user"] as? String ?: "",
+//                            created_at = (data["created_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString() ?: "",
+//                            deleted_at = (data["deleted_at"] as? com.google.firebase.Timestamp)?.toDate()?.toString()
+//                        )
+//                        productList.add(product)
+//                    }
+//                }
+//
+//                products = productList
+//                Log.d("Dashboard", "Products loaded: ${productList.size}")
+//            } catch (e: Exception) {
+//                Log.e("Dashboard", "Failed to load products: ${e.message}")
+//                // Just show an empty list instead of sample data
+//                products = emptyList()
+//            } finally {
+//                isLoading = false
+//            }
+//        }
+//    }
 
     private fun loadUserInitials() {
         val currentUser = auth.currentUser
