@@ -4,9 +4,13 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.projectmdp.data.repository.ProductRepository
+import com.example.projectmdp.data.repository.TransactionRepository
 import com.example.projectmdp.data.source.dataclass.Product
+import com.example.projectmdp.data.source.remote.CreateTransactionRequest
 import com.example.projectmdp.data.source.remote.RetrofitInstance
 import com.example.projectmdp.data.source.response.MidtransResponse
+import com.example.projectmdp.data.source.response.isSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,19 +65,27 @@ class MidtransViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             try {
                 // Product details for Midtrans
-                val orderDetails = mapOf(
-                    "product_id" to product.product_id,
-                    "quantity" to quantity,
-                    "price" to product.price
+//                val orderDetails = mapOf(
+//                    "product_id" to product.product_id,
+//                    "quantity" to quantity,
+//                    "price" to product.price
+//                )
+
+                val orderDetails = CreateTransactionRequest(
+                    product.product_id,
+                    quantity,
+                    product.price
                 )
+
+
 
                 // Call API to create transaction
                 val response = RetrofitInstance.Transactionapi.createTransaction(orderDetails)
 
                 if (response.isSuccess()) {
                     val data = response.data
-                    if (data != null && data.token != null && data.redirect_url != null) {
-                        _paymentToken.value = data.token
+                    if (data != null && data.snap_token != null && data.redirect_url != null) {
+                        _paymentToken.value = data.snap_token
                         _paymentUrl.value = data.redirect_url
                         _paymentStatus.value = PaymentStatus.PENDING
                     } else {
@@ -95,10 +107,10 @@ class MidtransViewModel @Inject constructor() : ViewModel() {
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                val response = RetrofitInstance.Transactionapi.checkTransactionStatus(orderId)
+                val response = RetrofitInstance.Transactionapi.getTransactionById(orderId)
 
                 if (response.isSuccess()) {
-                    val status = response.data?.transaction_status
+                    val status = response.data?.transaction?.payment_status
                     _paymentStatus.value = when (status?.lowercase()) {
                         "settlement", "capture" -> PaymentStatus.SUCCESS
                         "pending" -> PaymentStatus.PENDING

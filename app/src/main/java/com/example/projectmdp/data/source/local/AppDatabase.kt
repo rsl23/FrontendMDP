@@ -9,13 +9,14 @@ import com.example.projectmdp.data.source.local.dao.ProductDao
 import com.example.projectmdp.data.source.local.dao.TransactionDao
 import com.example.projectmdp.data.source.local.dao.UserDao
 import com.example.projectmdp.data.source.local.entity.ProductEntity
+import com.example.projectmdp.data.source.local.entity.TransactionEntity
 import com.example.projectmdp.data.source.local.entity.UserEntity
 
-@Database(entities = [UserEntity::class, ProductEntity::class], version = 1)
+@Database(entities = [UserEntity::class, ProductEntity::class, TransactionEntity::class], version = 2)
 abstract class AppDatabase: RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun productDao(): ProductDao
-//    abstract fun transactionDao(): TransactionDao
+    abstract fun transactionDao(): TransactionDao
     companion object{
         @Volatile
         private var INSTANCE: AppDatabase? = null
