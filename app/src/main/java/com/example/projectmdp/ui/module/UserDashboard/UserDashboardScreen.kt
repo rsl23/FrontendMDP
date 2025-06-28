@@ -1,5 +1,6 @@
 package com.example.projectmdp.ui.module.UserDashboard
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.projectmdp.navigation.Routes
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -103,7 +105,11 @@ fun UserDashboardScreen(
                 items(products) { product ->
                     ProductCard(
                         product = product,
-                        onProductClick = { /* Navigate to product details */ },
+                        onProductClick = {
+                            val routeToNavigate = Routes.productDetailRoute(product.product_id)
+                            Log.d("NavigationDebug", "Attempting to navigate to: $routeToNavigate")
+                            navController.navigate(routeToNavigate)
+                        },
                         onBuyClick = { viewModel.buyProduct(product) },
                         onChatClick = { viewModel.chatWithSeller(product.user_id) }
                     )

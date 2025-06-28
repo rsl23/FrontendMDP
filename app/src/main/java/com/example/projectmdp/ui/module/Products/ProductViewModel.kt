@@ -3,26 +3,32 @@ package com.example.projectmdp.ui.module.Products
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectmdp.data.repository.ProductRepository
 import com.example.projectmdp.data.repository.UserRepository
 import com.example.projectmdp.data.source.dataclass.Product
 import com.example.projectmdp.data.source.dataclass.User
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
+@HiltViewModel
 class ProductViewModel @Inject constructor(
     private val productRepository: ProductRepository, // Inject the repository
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val  savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _products = MutableLiveData<List<Product>>()
     val products: LiveData<List<Product>> = _products
 
     private val _selectedProduct = MutableLiveData<Product?>() // Use nullable Product
     val selectedProduct: LiveData<Product?> = _selectedProduct
+
+    val productId: String = savedStateHandle.get<String>("productId")
+        ?: throw IllegalStateException("Product ID 'productId' is missing from SavedStateHandle. Check navigation route arguments.")
 
     // New LiveData for the seller information
     private val _selectedProductSeller = MutableLiveData<User?>()
@@ -37,7 +43,9 @@ class ProductViewModel @Inject constructor(
     // LiveData for product creation success (as discussed previously)
     private val _productCreationSuccess = MutableLiveData<Boolean>()
     val productCreationSuccess: LiveData<Boolean> = _productCreationSuccess
-
+    init {
+        fetchProductById(productId) // Load details for the specific product
+    }
     fun setSelectedProduct(product: Product) {
         _selectedProduct.value = product
         // Automatically fetch seller information when a product is selected
@@ -113,20 +121,6 @@ class ProductViewModel @Inject constructor(
         }
     }
 
-    fun searchProducts(query: String) {
-        _isLoading.value = true
-        _errorMessage.value = null
-        viewModelScope.launch {
-            productRepository.searchProducts(query).collect { result ->
-                _isLoading.value = false
-                result.onSuccess { products ->
-                    _products.value = products // Assuming search updates the main product list
-                }.onFailure { throwable ->
-                    _errorMessage.value = throwable.message ?: "Failed to search products."
-                }
-            }
-        }
-    }
 
     fun createProduct(name: String, description: String, price: Double, category: String, imageUri: Uri?) {
         _isLoading.value = true

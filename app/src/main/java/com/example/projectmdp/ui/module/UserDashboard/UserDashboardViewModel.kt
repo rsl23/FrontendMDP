@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.example.projectmdp.data.repository.ProductRepository
 import com.example.projectmdp.data.source.dataclass.Product
 import com.google.firebase.auth.FirebaseAuth
@@ -228,4 +229,5 @@ open class UserDashboardViewModel @Inject constructor(
         // Implement chat functionality
         Log.d("Dashboard", "Chat with seller: $sellerId")
     }
+
 }
