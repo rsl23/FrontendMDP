@@ -7,11 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.projectmdp.data.model.auth.RegisterDto
 import com.example.projectmdp.data.repository.AuthRepository
 import com.example.projectmdp.data.source.remote.VerifyTokenRequest
+import com.example.projectmdp.navigation.Routes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,9 +35,17 @@ class RegisterViewModel @Inject constructor(
     var isLoading by mutableStateOf(false)
 //        private set
 
+    // Add error message state for showing toast
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage = _errorMessage.asStateFlow()
+
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _googleSignInEvent = MutableSharedFlow<Unit>()
     val googleSignInEvent = _googleSignInEvent.asSharedFlow()
+
+    // Add navigation event for successful registration
+    private val _navigationEvent = MutableSharedFlow<String>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
 
     fun onEmailChange(newEmail: String) { email = newEmail }
     fun onPasswordChange(newPassword: String) { password = newPassword }
@@ -42,9 +53,19 @@ class RegisterViewModel @Inject constructor(
     fun onAddressChange(newAddress: String) { address = newAddress }
     fun onPhoneNumberChange(newPhoneNumber: String) { phoneNumber = newPhoneNumber }
 
+    // Function to clear error message after it's been shown
+    fun clearErrorMessage() {
+        _errorMessage.value = null
+    }
+
     fun register() {
+        if (email.isBlank() || password.isBlank()) {
+            _errorMessage.value = "Email and password cannot be empty"
+            return
+        }
+
         if (password != confirmPassword) {
-            Log.e("Register", "Passwords do not match")
+            _errorMessage.value = "Passwords do not match"
             return
         }
 
@@ -66,23 +87,30 @@ class RegisterViewModel @Inject constructor(
                                         // Kirim ID Token ke backend sesuai endpoint verifyFirebaseToken
                                         val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
                                         Log.d("BackendRegister", "Success: $response")
+
+                                        // Navigate to login screen after successful registration
+                                        _navigationEvent.emit(Routes.LOGIN)
                                     } catch (e: Exception) {
                                         Log.e("BackendRegister", "Failed: ${e.message}")
+                                        _errorMessage.value = "Server registration failed: ${e.message}"
                                     } finally {
                                         isLoading = false
                                     }
                                 }
                             } else {
                                 Log.e("Register", "Failed to retrieve ID token")
+                                _errorMessage.value = "Failed to retrieve authentication token"
                                 isLoading = false
                             }
                         }
                         ?.addOnFailureListener { e ->
                             Log.e("Register", "Get ID token failed: ${e.message}")
+                            _errorMessage.value = "Token retrieval failed: ${e.message}"
                             isLoading = false
                         }
                 } else {
                     Log.e("Register", "Firebase auth failed: ${task.exception?.message}")
+                    _errorMessage.value = task.exception?.message ?: "Registration failed"
                     isLoading = false
                 }
             }
@@ -94,24 +122,21 @@ class RegisterViewModel @Inject constructor(
         }
     }
 
-    //Fungsi ini akan dipanggil oleh UI setelah mendapatkan idToken
     fun onGoogleSignInResult(idToken: String?) {
         if (idToken == null) {
-            Log.e("GoogleRegister", "Google Sign-In failed or idToken is null")
-            // Mungkin tampilkan pesan error di UI melalui state lain
+            Log.e("RegisterViewModel", "Google sign-in failed: ID Token is null")
+            _errorMessage.value = "Google sign-in failed: Missing ID token"
             return
         }
-        firebaseAuthWithGoogle(idToken)
-    }
 
-    fun firebaseAuthWithGoogle(idToken: String) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
         isLoading = true
-
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Log.d("GoogleRegister", "Success")
+                    Log.d("RegisterViewModel", "Firebase auth with Google success")
+
+                    // Get ID token
                     auth.currentUser?.getIdToken(true)
                         ?.addOnSuccessListener { result ->
                             val idToken = result.token
@@ -123,27 +148,32 @@ class RegisterViewModel @Inject constructor(
                                         //  Kirim ID Token ke backend sesuai endpoint verifyFirebaseToken
                                         val response = authRepository.verifyToken(VerifyTokenRequest(idToken))
                                         Log.d("Register With Google", "Success: $response")
+
+                                        // Navigate to login screen after successful Google registration
+                                        _navigationEvent.emit(Routes.LOGIN)
                                     } catch (e: Exception) {
                                         Log.e("Register With Google", "Failed: ${e.message}")
+                                        _errorMessage.value = "Server registration failed: ${e.message}"
                                     } finally {
                                         isLoading = false
                                     }
                                 }
                             } else {
                                 Log.e("Register", "Failed to retrieve ID token")
+                                _errorMessage.value = "Failed to retrieve authentication token"
                                 isLoading = false
                             }
                         }
                         ?.addOnFailureListener { e ->
                             Log.e("Register", "Get ID token failed: ${e.message}")
+                            _errorMessage.value = "Token retrieval failed: ${e.message}"
                             isLoading = false
                         }
-
                 } else {
-                    Log.e("GoogleRegister", "Failed: ${task.exception?.message}")
+                    Log.e("RegisterViewModel", "Firebase auth with Google failed: ${task.exception?.message}")
+                    _errorMessage.value = task.exception?.message ?: "Google registration failed"
                     isLoading = false
                 }
             }
     }
 }
-

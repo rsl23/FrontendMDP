@@ -20,11 +20,11 @@ data class GetProduct(
 )
 
 
-data class ApiResponse<T>(
-    val status: Int,
-    val message: String,
-    val data: T?
-)
+//data class ApiResponse<T>(
+//    val status: Int,
+//    val message: String,
+//    val data: T?
+//)
 
 // Product Data Class
 data class Product(

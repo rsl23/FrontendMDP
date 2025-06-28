@@ -1,6 +1,7 @@
 package com.example.projectmdp.ui.module.register
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -17,7 +18,10 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,6 +34,7 @@ import com.example.projectmdp.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun RegisterScreen(
@@ -45,6 +50,30 @@ fun RegisterScreen(
     val isLoading = viewModel.isLoading
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Collect error messages for toast notifications
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
+    // Show toast for error messages
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearErrorMessage()
+        }
+    }
+
+    // Listen for navigation events from ViewModel
+    LaunchedEffect(key1 = true) {
+        viewModel.navigationEvent.collectLatest { destination ->
+            // Navigate to login page after successful registration
+            navController.navigate(destination) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
+        }
+    }
 
     val googleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -284,4 +313,3 @@ fun RegisterScreen(
         }
     }
 }
-

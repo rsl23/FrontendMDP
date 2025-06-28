@@ -46,4 +46,19 @@ object RetrofitInstance {
     val Productapi: ProductApi by lazy {
         retrofit.create(ProductApi::class.java)
     }
+
+    val Chatapi: ChatApi by lazy {
+        retrofit.create(ChatApi::class.java)
+    }
+
+    val Transactionapi: TransactionApi by lazy {
+        retrofit.create(TransactionApi::class.java)
+    }
+
+    val Userapi: UserApi by lazy {
+        retrofit.create(UserApi::class.java)
+    }
+
+
+
 }

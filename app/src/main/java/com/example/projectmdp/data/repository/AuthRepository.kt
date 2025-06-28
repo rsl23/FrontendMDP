@@ -2,6 +2,7 @@ package com.example.projectmdp.data.repository
 
 import com.example.projectmdp.data.source.remote.RetrofitInstance
 import com.example.projectmdp.data.source.remote.VerifyTokenRequest
+import com.example.projectmdp.data.source.response.VerifyResponse
 import javax.inject.Inject
 
 open class AuthRepository @Inject constructor() {
@@ -12,8 +13,8 @@ open class AuthRepository @Inject constructor() {
 //        return RetrofitInstance.Authapi.register(registerDto)
 //    }
 
-    open suspend fun verifyToken(token: VerifyTokenRequest){
-        RetrofitInstance.Authapi.verifyToken(token)
+    open suspend fun verifyToken(token: VerifyTokenRequest): VerifyResponse{
+        return RetrofitInstance.Authapi.verifyToken(token)
     }
 
     open suspend fun profileUser(){}
