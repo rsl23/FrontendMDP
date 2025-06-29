@@ -38,6 +38,7 @@ import android.widget.Toast // <--- ADD THIS IMPORT for toast messages
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
+import com.example.projectmdp.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +54,11 @@ fun DetailsScreen(
 
     val context = LocalContext.current // Get context for Toast messages
     val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("id", "ID")) }
+
+    // Load product when component starts
+    LaunchedEffect(productId) {
+        productViewModel.fetchProductById(productId)
+    }
 
     Scaffold(
         topBar = {
@@ -83,7 +89,14 @@ fun DetailsScreen(
                 ) {
                     Button(
                         onClick = {
-                            navController.navigate("TRANSACTION")
+                            product?.let {
+                                navController.navigate(
+                                    Routes.midtransRoute(
+                                        productId = it.product_id,
+                                        price = it.price
+                                    )
+                                )
+                            }
                         },
                         modifier = Modifier.weight(1f), // Take equal weight
                         shape = RoundedCornerShape(12.dp),

@@ -99,11 +99,24 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 navController = navController
             )
         }
-        composable(route = Routes.transactionRoute("transactionId")){ 
-            MidtransScreen(
-                viewModel = hiltViewModel(),
-                navController = navController
+        composable(
+            route = Routes.MIDTRANS,
+            arguments = listOf(
+                navArgument("productId") { type = NavType.StringType },
+                navArgument("price") { type = NavType.StringType }
             )
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId")
+            val price = backStackEntry.arguments?.getString("price")?.toDoubleOrNull()
+
+            if (productId != null && price != null) {
+                MidtransScreen(
+                    navController = navController,
+                    productId = productId
+                )
+            } else {
+                Text("Error: Missing product ID or price.")
+            }
         }
     }
 }

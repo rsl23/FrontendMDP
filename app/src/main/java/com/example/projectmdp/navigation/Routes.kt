@@ -11,6 +11,7 @@ object Routes {
     const val TRANSACTION_HISTORY = "transaction_history"
     const val CHAT_LIST = "chat_list"
     const val TRANSACTION = "transaction"
+    const val MIDTRANS = "midtrans/{productId}/{price}"
     // Helper function to create the route with an ID
     fun productDetailRoute(productId: String): String {
         return "product_detail/$productId"
@@ -21,5 +22,9 @@ object Routes {
 
     fun transactionRoute(transactionId: String): String{
         return "transaction/$transactionId"
+    }
+
+    fun midtransRoute(productId: String, price: Double): String {
+        return "midtrans/$productId/$price"
     }
 }
