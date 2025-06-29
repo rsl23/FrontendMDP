@@ -1,31 +1,43 @@
 package com.example.projectmdp.ui.module.Products
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape // Required for button shapes
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FavoriteBorder // Keep if used elsewhere
+import androidx.compose.material.icons.filled.Share // Keep if used elsewhere
+import androidx.compose.material.icons.filled.ShoppingCart // <--- ADD THIS IMPORT for Buy Now icon
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue // Import this
-import androidx.compose.runtime.livedata.observeAsState // Import this
-import androidx.compose.runtime.remember // Import this for NumberFormat
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext // <--- ADD THIS IMPORT for Toast/ImageRequest
+import androidx.compose.ui.res.painterResource // <--- ADD THIS IMPORT for any custom drawables (like chat icon if not Material)
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp // <--- ADD THIS IMPORT for font size if used in buttons
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest // <--- ADD THIS IMPORT for AsyncImage model builder
+import com.example.projectmdp.R // <--- ADD THIS IMPORT if you use R.drawable for placeholders/custom icons
 import com.example.projectmdp.data.source.dataclass.Product
 import com.example.projectmdp.data.source.dataclass.User
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.Date // Make sure this is imported if you derive a Date type
+import java.util.Date
+import android.widget.Toast // <--- ADD THIS IMPORT for toast messages
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Email
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,15 +46,12 @@ fun DetailsScreen(
     productViewModel: ProductViewModel = hiltViewModel(),
     productId: String
 ) {
-    // Correctly observe LiveData as Compose State
     val product: Product? by productViewModel.selectedProduct.observeAsState()
     val seller: User? by productViewModel.selectedProductSeller.observeAsState()
     val isLoading: Boolean by productViewModel.isLoading.observeAsState(initial = false)
     val errorMessage: String? by productViewModel.errorMessage.observeAsState()
 
-    // Assuming ProductViewModel's init block calls fetchProductById(productId)
-    // No explicit fetch calls here in the Composable body on every recomposition.
-
+    val context = LocalContext.current // Get context for Toast messages
     val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("id", "ID")) }
 
     Scaffold(
@@ -53,34 +62,83 @@ fun DetailsScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         },
+        // --- START: MODIFIED bottomBar ---
         bottomBar = {
-            BottomAppBar(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Spacer(Modifier.weight(1f))
-                Button(
-                    onClick = { /* TODO: Handle Buy Now */ },
-                    modifier = Modifier.padding(end = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
+            // Check if product is loaded before showing buttons
+            if (product != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp) // Padding around the buttons
+                        .navigationBarsPadding(), // Account for system navigation bar
+                    horizontalArrangement = Arrangement.spacedBy(16.dp), // Space between buttons
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Buy Now")
+                    Button(
+                        onClick = {
+                            // TODO: Add your actual Buy Now navigation/logic here
+                        },
+                        modifier = Modifier.weight(1f), // Take equal weight
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        contentPadding = PaddingValues(vertical = 12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Buy Now",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Buy Now", fontSize = 16.sp)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            val sellerId = seller?.id
+                            if (sellerId != null) {
+                               navController.navigate("chat/$sellerId")
+                            } else {
+                                Toast.makeText(context, "Seller information not available for chat.", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier.weight(1f), // Take equal weight
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        contentPadding = PaddingValues(vertical = 12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = "Chat",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Chat", fontSize = 16.sp)
+                    }
                 }
             }
         }
-    ) { paddingValues ->
+    ) { paddingValuesFromScaffold -> // Rename paddingValues to avoid clash with local paddingValues
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
+                .padding(paddingValuesFromScaffold) // Use the Scaffold's padding
+                .padding(horizontal = 16.dp) // Keep your original horizontal padding inside
+                .verticalScroll(rememberScrollState()), // Keep original scroll modifier on content
             contentAlignment = Alignment.Center
         ) {
-            // In DetailsScreen within the 'when' block:
             when {
                 isLoading -> {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -92,8 +150,7 @@ fun DetailsScreen(
                     Text("Product with ID $productId not found.")
                 }
                 else -> {
-                    // Explicitly assert that 'product' is non-null here.
-                    // The 'when' block guarantees this logic.
+                    // This content remains identical to your original ProductDetailsContent logic
                     ProductDetailsContent(product = product!!, seller = seller, currencyFormat = currencyFormat)
                 }
             }
@@ -101,17 +158,24 @@ fun DetailsScreen(
     }
 }
 
-// Extract the main content into a separate composable for clarity
+// ProductDetailsContent Composable (remains completely original from your provided code)
 @Composable
 private fun ProductDetailsContent(product: Product, seller: User?, currencyFormat: NumberFormat) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    val context = LocalContext.current // Added context for ImageRequest
+
+    Column(modifier = Modifier.fillMaxSize()) { // Keep fillMaxSize as it's the inner scrollable content
         AsyncImage(
-            model = product.image,
+            model = ImageRequest.Builder(context) // Use context for ImageRequest
+                .data(product.image)
+                .crossfade(true)
+                .build(),
             contentDescription = product.name,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp),
             contentScale = ContentScale.Crop,
+            error = painterResource(id = R.drawable.alert_error), // Assuming these drawables exist
+            placeholder = painterResource(id = R.drawable.landscape_placeholder) // Assuming these drawables exist
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -155,16 +219,15 @@ private fun ProductDetailsContent(product: Product, seller: User?, currencyForma
         Spacer(modifier = Modifier.height(16.dp))
 
         // Handle date formatting
-        val formattedDate = remember(product.created_at) { // Use remember to avoid recalculating on every recomposition
+        val formattedDate = remember(product.created_at) {
             try {
-                // Assuming product.created_at is in a format like "yyyy-MM-dd HH:mm:ss" or ISO 8601
+                // Assuming product.created_at is in a format like "yyyy-MM-dd'T'HH:mm:ss'Z'" (ISO 8601 UTC)
                 // Adjust this SimpleDateFormat pattern to match your backend's string exactly
-                val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()) // Example ISO 8601
-                parser.timeZone = java.util.TimeZone.getTimeZone("UTC") // If your backend dates are UTC
+                val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+                parser.timeZone = java.util.TimeZone.getTimeZone("UTC") // Set UTC timezone for parsing
                 val date = parser.parse(product.created_at)
                 SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date) // Format for display
             } catch (e: Exception) {
-                // Log the error or return a fallback string
                 e.printStackTrace()
                 product.created_at // Fallback to raw string if parsing fails
             }
@@ -173,16 +236,16 @@ private fun ProductDetailsContent(product: Product, seller: User?, currencyForma
             text = "Created At: $formattedDate",
             style = MaterialTheme.typography.bodyMedium
         )
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1f)) // Original spacer, pushes content up if less than full screen
         Text(
             text = "Seller: ${seller?.username ?: "N/A"}",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            text = "Location: ${seller?.address ?: "N/A"}",
+            text = "Location: ${seller?.address ?: "N/A"}", // Assuming seller has an address field
             style = MaterialTheme.typography.bodyMedium
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp)) // Original spacer
     }
 }

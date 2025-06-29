@@ -15,6 +15,9 @@ import com.example.projectmdp.ui.module.Products.DetailsScreen
 import com.example.projectmdp.ui.module.login.LoginScreen
 import com.example.projectmdp.ui.module.register.RegisterScreen
 import com.example.projectmdp.ui.module.UserDashboard.UserDashboardScreen
+import com.example.projectmdp.ui.module.chat.ChatScreen
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -64,6 +67,17 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             CreateProductScreen(
                 viewModel = hiltViewModel(),
                 navController = navController
+            )
+        }
+        composable(Routes.chatRoute("{otherUserId}")) { navBackStackEntry ->
+            val otherUserId = navBackStackEntry.arguments?.getString("otherUserId") ?: ""
+            val currentUser = FirebaseAuth.getInstance().currentUser?.uid
+            Log.d("NavigationDebug", "Arrived at ChatScreen. Received otherUserId: $otherUserId")
+            Log.d("NavigationDebug", "Current User ID: $currentUser")
+            ChatScreen(
+                receiverId = otherUserId,
+                navController = navController,
+                currentUserId = currentUser ?: ""
             )
         }
     }
