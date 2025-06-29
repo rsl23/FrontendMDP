@@ -56,6 +56,30 @@ class LoginViewModel @Inject constructor(
         _errorMessage.value = null
     }
 
+    fun checkAutoLogin() {
+        val savedToken = sessionManager.getToken()
+        if (!savedToken.isNullOrBlank()) {
+            Log.d("AutoLogin", "Saved token found: $savedToken")
+            RetrofitInstance.setToken(savedToken)
+
+            viewModelScope.launch {
+                try {
+                    val response = authRepository.verifyToken(VerifyTokenRequest(savedToken))
+                    val userRole = response.data?.user?.role
+
+                        _navigationEvent.emit(Routes.USER_DASHBOARD)
+
+                } catch (e: Exception) {
+                    Log.e("AutoLogin", "Failed: ${e.message}")
+                    // Jika token tidak valid, bisa clear dari session
+                    sessionManager.clearToken()
+                }
+            }
+        } else {
+            Log.d("AutoLogin", "No token found")
+        }
+    }
+
     fun login() {
         if (email.isBlank() || password.isBlank()) {
             _errorMessage.value = "Email and password cannot be empty"
@@ -80,7 +104,7 @@ class LoginViewModel @Inject constructor(
 
                                     // Check user role and navigate accordingly
                                     val userRole = response.data?.user?.role
-                                    if (userRole?.equals("user", ignoreCase = true) == true) {
+                                    if (userRole?.equals("user", ignoreCase = true) == true || userRole?.equals("buyer", ignoreCase = true) == true) {
                                         _navigationEvent.emit(Routes.USER_DASHBOARD)
                                     } else {
                                         // For other roles, you can add navigation to their respective screens

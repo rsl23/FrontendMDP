@@ -54,6 +54,11 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
         }
     }
 
+    LaunchedEffect(true) {
+        viewModel.checkAutoLogin()
+    }
+
+
     // Collect navigation events
     val scope = rememberCoroutineScope()
     LaunchedEffect(key1 = true) {
