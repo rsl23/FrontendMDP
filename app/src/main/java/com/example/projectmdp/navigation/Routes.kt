@@ -9,6 +9,7 @@ object Routes {
     const val CHAT = "chat/{otherUserId}"
     const val EDIT_PROFILE = "edit_profile"
     const val TRANSACTION_HISTORY = "transaction_history"
+    const val CHAT_LIST = "chat_list"
     // Helper function to create the route with an ID
     fun productDetailRoute(productId: String): String {
         return "product_detail/$productId"

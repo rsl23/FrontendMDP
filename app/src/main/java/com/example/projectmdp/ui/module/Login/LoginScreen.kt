@@ -56,7 +56,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), modifier: Modifier = Mo
 
     LaunchedEffect(true) {
         //buat lek gk mau auto login
-        viewModel.deleteAutoLogin()
+//        viewModel.deleteAutoLogin()
         viewModel.checkAutoLogin()
     }
 

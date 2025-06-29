@@ -55,5 +55,6 @@ class ChatListViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
+
     }
 }

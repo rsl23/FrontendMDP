@@ -235,5 +235,5 @@ class ChatRepository @Inject constructor(
         } catch (e: Exception) {
             emit(Result.failure(e))
         }
-    }
+        }
 }

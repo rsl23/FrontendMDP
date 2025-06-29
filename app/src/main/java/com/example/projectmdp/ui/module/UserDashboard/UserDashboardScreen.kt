@@ -68,7 +68,8 @@ fun UserDashboardScreen(
         ) {
             TopBar(
                 userInitials = userInitials,
-                onProfileClick = { showProfileMenu = true }
+                onProfileClick = { showProfileMenu = true },
+                onChatClick = { navController.navigate(Routes.CHAT_LIST)}
             )
 
             SearchBar(
@@ -167,7 +168,8 @@ fun UserDashboardScreen(
 @Composable
 private fun TopBar(
     userInitials: String,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onChatClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -183,20 +185,34 @@ private fun TopBar(
             color = MaterialTheme.colorScheme.primary
         )
 
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
-                .clickable { onProfileClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = userInitials,
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Chat Icon Button
+            IconButton(onClick = onChatClick) {
+                Icon(
+                    painter = painterResource(id = R.drawable.chat_24px), // make sure this exists
+                    contentDescription = "Messages",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // User Profile Circle
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable { onProfileClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = userInitials,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
         }
     }
 }
@@ -404,11 +420,11 @@ fun ProfileMenuPopup(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.person_24px),
-                            contentDescription = "Edit Profile",
-                            modifier = Modifier.size(20.dp)
-                        )
+//                        Icon(
+//                            painter = painterResource(id = R.drawable.person_24px),
+//                            contentDescription = "Edit Profile",
+//                            modifier = Modifier.size(20.dp)
+//                        )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("Edit Profile")
                     }
@@ -453,11 +469,11 @@ fun ProfileMenuPopup(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.logout_24px),
-                            contentDescription = "Logout",
-                            modifier = Modifier.size(20.dp)
-                        )
+//                        Icon(
+//                            painter = painterResource(id = R.drawable.logout_24px),
+//                            contentDescription = "Logout",
+//                            modifier = Modifier.size(20.dp)
+//                        )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("Logout")
                     }
