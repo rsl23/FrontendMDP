@@ -42,12 +42,12 @@ class EditProfileViewModel @Inject constructor() : ViewModel() {
             viewModelScope.launch {
                 try {
                     _uiState.value = _uiState.value.copy(isLoading = true)
-
+                    
                     val userDoc = firestore.collection("users")
                         .document(currentUser.uid)
                         .get()
                         .await()
-
+                    Log.d("EditProfileViewModel", "User document: ${userDoc.data}")
                     if (userDoc.exists()) {
                         val userData = userDoc.data
                         _uiState.value = _uiState.value.copy(

@@ -105,5 +105,22 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 navController = navController
             )
         }
+        composable(
+            route = Routes.UPDATE_PRODUCT_WITH_ID, // Use the route with ID placeholder
+            arguments = listOf(navArgument("productId") { type = NavType.StringType }) // Declare the argument
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId") // Extract the productId
+            if (productId != null) {
+                CreateProductScreen(
+                    viewModel = hiltViewModel(),
+                    navController = navController,
+                    productId = productId // Pass the productId to CreateProductScreen
+                )
+            } else {
+                Text("Error: Product ID was null for UPDATE_PRODUCT route.")
+                Log.e("NavigationDebug", "Product ID was null for UPDATE_PRODUCT route.")
+            }
+        }
+
     }
 }
