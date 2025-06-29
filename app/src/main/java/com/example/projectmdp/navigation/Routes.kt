@@ -10,11 +10,16 @@ object Routes {
     const val EDIT_PROFILE = "edit_profile"
     const val TRANSACTION_HISTORY = "transaction_history"
     const val CHAT_LIST = "chat_list"
+    const val TRANSACTION = "transaction"
     // Helper function to create the route with an ID
     fun productDetailRoute(productId: String): String {
         return "product_detail/$productId"
     }
     fun chatRoute(otherUserId: String): String {
         return "chat/$otherUserId"
+    }
+
+    fun transactionRoute(transactionId: String): String{
+        return "transaction/$transactionId"
     }
 }

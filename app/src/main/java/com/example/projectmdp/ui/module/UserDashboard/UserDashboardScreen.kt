@@ -344,39 +344,39 @@ private fun ProductCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Button(
-                        onClick = onBuyClick,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Buy",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Buy", fontSize = 12.sp)
-                    }
+//                    Button(
+//                        onClick = onBuyClick,
+//                        modifier = Modifier.weight(1f),
+//                        shape = RoundedCornerShape(8.dp),
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = MaterialTheme.colorScheme.primary
+//                        )
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.ShoppingCart,
+//                            contentDescription = "Buy",
+//                            modifier = Modifier.size(16.dp)
+//                        )
+//                        Spacer(modifier = Modifier.width(4.dp))
+//                        Text("Buy", fontSize = 12.sp)
+//                    }
 
-                    OutlinedButton(
-                        onClick = onChatClick,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.chat_24px),
-                            contentDescription = "Chat",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Chat", fontSize = 12.sp)
-                    }
+//                    OutlinedButton(
+//                        onClick = onChatClick,
+//                        modifier = Modifier.weight(1f),
+//                        shape = RoundedCornerShape(8.dp),
+//                        colors = ButtonDefaults.outlinedButtonColors(
+//                            contentColor = MaterialTheme.colorScheme.primary
+//                        )
+//                    ) {
+//                        Icon(
+//                            painter = painterResource(id = R.drawable.chat_24px),
+//                            contentDescription = "Chat",
+//                            modifier = Modifier.size(16.dp)
+//                        )
+//                        Spacer(modifier = Modifier.width(4.dp))
+//                        Text("Chat", fontSize = 12.sp)
+//                    }
                 }
             }
         }

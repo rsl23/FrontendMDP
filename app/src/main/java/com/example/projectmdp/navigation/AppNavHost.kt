@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.projectmdp.ui.module.Midtrans.MidtransScreen
 import com.example.projectmdp.ui.module.Products.CreateProductScreen
 import com.example.projectmdp.ui.module.Products.DetailsScreen
 import com.example.projectmdp.ui.module.login.LoginScreen
@@ -94,6 +95,12 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         }
         composable(route = Routes.CHAT_LIST) {
             ChatListScreen(
+                viewModel = hiltViewModel(),
+                navController = navController
+            )
+        }
+        composable(route = Routes.transactionRoute("transactionId")){ 
+            MidtransScreen(
                 viewModel = hiltViewModel(),
                 navController = navController
             )
