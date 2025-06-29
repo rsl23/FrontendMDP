@@ -79,7 +79,8 @@ fun UserDashboardScreen(
             // Top Bar with Logo and Profile
             TopBar(
                 userInitials = userInitials,
-                onProfileClick = { /* Handle profile click */ }
+                onProfileClick = { /* Handle profile click */ },
+                onChatClick = { navController.navigate(Routes.CHAT_LIST)}
             )
 
             // Search Bar
@@ -161,7 +162,8 @@ fun UserDashboardScreen(
 @Composable
 private fun TopBar(
     userInitials: String,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onChatClick: () -> Unit // ← add this
 ) {
     Row(
         modifier = Modifier
@@ -178,24 +180,38 @@ private fun TopBar(
             color = MaterialTheme.colorScheme.primary
         )
 
-        // User Profile Circle
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
-                .clickable { onProfileClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = userInitials,
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Chat Icon Button
+            IconButton(onClick = onChatClick) {
+                Icon(
+                    painter = painterResource(id = R.drawable.chat_24px), // make sure this exists
+                    contentDescription = "Messages",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // User Profile Circle
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable { onProfileClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = userInitials,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
         }
     }
 }
+
 
 @Composable
 private fun SearchBar(
