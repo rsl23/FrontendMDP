@@ -112,13 +112,44 @@ class ChatRepository @Inject constructor(
         try {
             val response = RetrofitInstance.Chatapi.getConversation(userId, page, limit)
             if (response.isSuccess()) {
-                response.data?.let { responseData ->
-                    val messages = responseData.data.messages.map { it.toChatMessage() }
-                    val pagination = responseData.data.pagination.toChatPagination()
-                    val otherUser = responseData.data.otherUser.toChatUser()
+                val data = response.data?.data
+                if (data != null) {
+                    val messages = data.messages.map { it.toChatMessage() }
+                    val pagination = data.pagination.toChatPagination()
+                    val otherUser = data.otherUser.toChatUser()
                     val chatMessages = ChatMessages(messages, pagination, otherUser)
                     emit(Result.success(chatMessages))
-                } ?: emit(Result.failure(Exception("No data received")))
+                } else {
+                    // 🔁 If no conversation data, start a new one with empty message
+                    val startResponse = RetrofitInstance.Chatapi.startChat(StartChatRequest(userId, ""))
+                    if (startResponse.isSuccess()) {
+                        val startData = startResponse.data?.data
+                        if (startData != null) {
+                            val chatMessage = ChatMessage(
+                                id = startData.chat_id,
+                                user_sender = startData.sender_id,
+                                user_receiver = startData.receiver_id,
+                                chat = startData.message,
+                                datetime = startData.datetime,
+                                status = startData.status,
+                                created_at = startData.datetime,
+                                updated_at = null,
+                                deleted_at = null
+                            )
+                            val otherUser = startData.receiver?.toChatUser() // optional, based on your API
+                            val chatMessages = ChatMessages(
+                                messages = listOf(chatMessage),
+                                pagination = ChatPagination(1, 1, 1, false, false, limit),
+                                otherUser = otherUser
+                            )
+                            emit(Result.success(chatMessages))
+                        } else {
+                            emit(Result.failure(Exception("Failed to start new chat.")))
+                        }
+                    } else {
+                        emit(Result.failure(Exception(startResponse.error ?: "Failed to create chat.")))
+                    }
+                }
             } else {
                 emit(Result.failure(Exception(response.error ?: "Unknown error")))
             }
@@ -126,6 +157,7 @@ class ChatRepository @Inject constructor(
             emit(Result.failure(e))
         }
     }
+
 
     suspend fun startChat(receiverId: String, message: String): Flow<Result<ChatMessage>> = flow {
         try {

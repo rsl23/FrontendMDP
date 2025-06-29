@@ -7,28 +7,51 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.projectmdp.ui.theme.ProjectMDPTheme
-
-data class Message(val id: String, val text: String, val isUser: Boolean, val timestamp: Long = System.currentTimeMillis())
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.projectmdp.data.source.dataclass.ChatMessage
 
 @Composable
-fun ChatView(modifier: Modifier = Modifier) {
-    var messageText by remember { mutableStateOf<String>("") }
-    val messages = remember { mutableStateListOf<Message>() }
+fun ChatScreen(
+    receiverId: String,
+    modifier: Modifier = Modifier,
+    viewModel: ChatViewModel = hiltViewModel(),
+    navController: NavController,
+    currentUserId: String
+) {
+    var messageText by remember { mutableStateOf("") }
+
+    // One-time setup to load messages and set current user
+    LaunchedEffect(receiverId) {
+        viewModel.setCurrentUserId(currentUserId)
+        viewModel.loadConversation(receiverId)
+    }
+
+    val messages = viewModel.messages
+    val isSending = viewModel.isSending
+    val isLoading = viewModel.isLoading
+    val error = viewModel.errorMessage
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             reverseLayout = true
         ) {
-            items(messages.sortedByDescending { it.timestamp }) { message ->
-                MessageBubble(message = message)
+            items(messages.sortedByDescending { it.datetime }) { message ->
+                MessageBubble(
+                    text = message.chat,
+                    isUser = message.user_sender == currentUserId
+                )
             }
         }
 
@@ -44,48 +67,44 @@ fun ChatView(modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = {
-                if (messageText.isNotBlank()) {
-                    val userMessage = Message(id = "user_${System.currentTimeMillis()}", text = messageText, isUser = true)
-                    messages.add(userMessage)
-                    // Simulate a response after a delay
-                    // In a real app, this would come from a backend or another user
-                    messages.add(Message(id = "bot_${System.currentTimeMillis()}", text = "Echo: ${userMessage.text}", isUser = false, timestamp = System.currentTimeMillis() + 100)) // Ensure bot message is slightly later
-                    messageText = ""
-                }
-            }) {
+            Button(
+                onClick = {
+                    if (messageText.isNotBlank()) {
+                        viewModel.sendMessage(receiverId, messageText)
+                        messageText = ""
+                    }
+                },
+                enabled = !isSending
+            ) {
                 Text("Send")
             }
+        }
+
+        if (error != null) {
+            Text(text = error, color = MaterialTheme.colorScheme.error)
         }
     }
 }
 
 @Composable
-fun MessageBubble(message: Message) {
+fun MessageBubble(text: String, isUser: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        horizontalArrangement = if (message.isUser) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = if (message.isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                containerColor = if (isUser) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.secondaryContainer
             ),
             modifier = Modifier.padding(horizontal = 8.dp)
         ) {
             Text(
-                text = message.text,
+                text = text,
                 modifier = Modifier.padding(8.dp)
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ChatScreenPreview() {
-    ProjectMDPTheme {
-        ChatView()
     }
 }

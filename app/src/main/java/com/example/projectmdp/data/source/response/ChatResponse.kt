@@ -60,8 +60,10 @@ data class StartChatData(
     val receiver_id: String,
     val message: String,
     val datetime: String,
-    val status: String
+    val status: String,
+    val receiver: OtherUser?
 )
+
 
 data class GetUserConversationsResponse(
     val status: String,
