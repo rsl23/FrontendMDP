@@ -17,7 +17,6 @@ import com.example.projectmdp.ui.module.register.RegisterScreen
 import com.example.projectmdp.ui.module.UserDashboard.UserDashboardScreen
 import com.example.projectmdp.ui.module.chat.ChatScreen
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -78,6 +77,18 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 receiverId = otherUserId,
                 navController = navController,
                 currentUserId = currentUser ?: ""
+            )
+        }
+        composable(route = Routes.EDIT_PROFILE) {
+            com.example.projectmdp.ui.module.EditProfile.EditProfileScreen(
+                viewModel = hiltViewModel(),
+                navController = navController
+            )
+        }
+        composable(route = Routes.TRANSACTION_HISTORY) {
+            com.example.projectmdp.ui.module.TransactionHistory.TransactionHistoryScreen(
+                viewModel = hiltViewModel(),
+                navController = navController
             )
         }
     }

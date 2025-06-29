@@ -151,4 +151,12 @@ open class UserDashboardViewModel @Inject constructor(
         Log.d("UserDashboardViewModel", "Chat with seller: $sellerId")
         // Implement your chat logic
     }
+
+    fun logout() {
+        Log.d("UserDashboardViewModel", "Logging out user")
+        auth.signOut()
+        // Clear any cached data if needed
+        products = emptyList()
+        searchQuery = ""
+    }
 }
