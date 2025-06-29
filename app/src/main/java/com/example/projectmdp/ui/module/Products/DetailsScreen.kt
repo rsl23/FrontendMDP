@@ -2,13 +2,11 @@ package com.example.projectmdp.ui.module.Products
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape // Required for button shapes
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FavoriteBorder // Keep if used elsewhere
-import androidx.compose.material.icons.filled.Share // Keep if used elsewhere
-import androidx.compose.material.icons.filled.ShoppingCart // <--- ADD THIS IMPORT for Buy Now icon
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,26 +16,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext // <--- ADD THIS IMPORT for Toast/ImageRequest
-import androidx.compose.ui.res.painterResource // <--- ADD THIS IMPORT for any custom drawables (like chat icon if not Material)
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp // <--- ADD THIS IMPORT for font size if used in buttons
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.request.ImageRequest // <--- ADD THIS IMPORT for AsyncImage model builder
-import com.example.projectmdp.R // <--- ADD THIS IMPORT if you use R.drawable for placeholders/custom icons
+import coil.request.ImageRequest
+import com.example.projectmdp.R
 import com.example.projectmdp.data.source.dataclass.Product
 import com.example.projectmdp.data.source.dataclass.User
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Date
-import android.widget.Toast // <--- ADD THIS IMPORT for toast messages
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.navigation.compose.currentBackStackEntryAsState // Added for SavedStateHandle communication
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,8 +51,30 @@ fun DetailsScreen(
     val isLoading: Boolean by productViewModel.isLoading.observeAsState(initial = false)
     val errorMessage: String? by productViewModel.errorMessage.observeAsState()
 
-    val context = LocalContext.current // Get context for Toast messages
+    val currentLoggedInUserId: String? by productViewModel.currentLoggedInUserId.observeAsState()
+
+    val productDeletionSuccess by productViewModel.productDeletionSuccess.observeAsState()
+
+    val context = LocalContext.current
     val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("id", "ID")) }
+
+    LaunchedEffect(productId) {
+        productViewModel.fetchProductById(productId)
+    }
+
+    LaunchedEffect(productDeletionSuccess) {
+        if (productDeletionSuccess == true) {
+            Toast.makeText(context, "Product deleted successfully!", Toast.LENGTH_SHORT).show()
+            navController.previousBackStackEntry?.savedStateHandle?.set("shouldRefreshDashboard", true)
+            navController.popBackStack()
+        }
+    }
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            productViewModel.clearErrorMessage()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -60,7 +82,7 @@ fun DetailsScreen(
                 title = { Text(product?.name ?: "Loading Product...") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -69,74 +91,119 @@ fun DetailsScreen(
                 )
             )
         },
-        // --- START: MODIFIED bottomBar ---
         bottomBar = {
-            // Check if product is loaded before showing buttons
-            if (product != null) {
+            val currentProduct = product
+            if (currentProduct != null) {
+                val isMyProduct = currentProduct.user_id == currentLoggedInUserId
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp) // Padding around the buttons
-                        .navigationBarsPadding(), // Account for system navigation bar
-                    horizontalArrangement = Arrangement.spacedBy(16.dp), // Space between buttons
+                        .padding(16.dp)
+                        .navigationBarsPadding(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = {
-                            navController.navigate("TRANSACTION")
-                        },
-                        modifier = Modifier.weight(1f), // Take equal weight
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        ),
-                        contentPadding = PaddingValues(vertical = 12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Buy Now",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text("Buy Now", fontSize = 16.sp)
-                    }
+                    if (isMyProduct) {
+                        Button(
+                            onClick = {
+                                navController.navigate("UPDATE_PRODUCT/$productId")
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            ),
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Update Product",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Update", fontSize = 16.sp)
+                        }
 
-                    OutlinedButton(
-                        onClick = {
-                            val sellerId = seller?.id
-                            if (sellerId != null) {
-                               navController.navigate("chat/$sellerId")
-                            } else {
-                                Toast.makeText(context, "Seller information not available for chat.", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier.weight(1f), // Take equal weight
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                        contentPadding = PaddingValues(vertical = 12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Email,
-                            contentDescription = "Chat",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text("Chat", fontSize = 16.sp)
+                        OutlinedButton(
+                            onClick = {
+                                productViewModel.deleteProduct(currentProduct.product_id)
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error,
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete Product",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Delete", fontSize = 16.sp)
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                navController.navigate("TRANSACTION")
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            ),
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = "Buy Now",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Buy Now", fontSize = 16.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                val sellerId = seller?.id
+                                if (sellerId != null) {
+                                    navController.navigate("chat/$sellerId")
+                                } else {
+                                    Toast.makeText(context, "Seller information not available for chat.", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary,
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = "Chat",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Chat", fontSize = 16.sp)
+                        }
                     }
                 }
             }
         }
-    ) { paddingValuesFromScaffold -> // Rename paddingValues to avoid clash with local paddingValues
+    ) { paddingValuesFromScaffold ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValuesFromScaffold) // Use the Scaffold's padding
-                .padding(horizontal = 16.dp) // Keep your original horizontal padding inside
-                .verticalScroll(rememberScrollState()), // Keep original scroll modifier on content
+                .padding(paddingValuesFromScaffold)
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState()),
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -150,7 +217,6 @@ fun DetailsScreen(
                     Text("Product with ID $productId not found.")
                 }
                 else -> {
-                    // This content remains identical to your original ProductDetailsContent logic
                     ProductDetailsContent(product = product!!, seller = seller, currencyFormat = currencyFormat)
                 }
             }
@@ -158,14 +224,13 @@ fun DetailsScreen(
     }
 }
 
-// ProductDetailsContent Composable (remains completely original from your provided code)
 @Composable
 private fun ProductDetailsContent(product: Product, seller: User?, currencyFormat: NumberFormat) {
-    val context = LocalContext.current // Added context for ImageRequest
+    val context = LocalContext.current
 
-    Column(modifier = Modifier.fillMaxSize()) { // Keep fillMaxSize as it's the inner scrollable content
+    Column(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
-            model = ImageRequest.Builder(context) // Use context for ImageRequest
+            model = ImageRequest.Builder(context)
                 .data(product.image)
                 .crossfade(true)
                 .build(),
@@ -174,8 +239,8 @@ private fun ProductDetailsContent(product: Product, seller: User?, currencyForma
                 .fillMaxWidth()
                 .height(300.dp),
             contentScale = ContentScale.Crop,
-            error = painterResource(id = R.drawable.alert_error), // Assuming these drawables exist
-            placeholder = painterResource(id = R.drawable.landscape_placeholder) // Assuming these drawables exist
+            error = painterResource(id = R.drawable.alert_error),
+            placeholder = painterResource(id = R.drawable.landscape_placeholder)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -218,34 +283,31 @@ private fun ProductDetailsContent(product: Product, seller: User?, currencyForma
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Handle date formatting
         val formattedDate = remember(product.created_at) {
             try {
-                // Assuming product.created_at is in a format like "yyyy-MM-dd'T'HH:mm:ss'Z'" (ISO 8601 UTC)
-                // Adjust this SimpleDateFormat pattern to match your backend's string exactly
                 val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-                parser.timeZone = java.util.TimeZone.getTimeZone("UTC") // Set UTC timezone for parsing
+                parser.timeZone = java.util.TimeZone.getTimeZone("UTC")
                 val date = parser.parse(product.created_at)
-                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date) // Format for display
+                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
             } catch (e: Exception) {
                 e.printStackTrace()
-                product.created_at // Fallback to raw string if parsing fails
+                product.created_at
             }
         }
         Text(
             text = "Created At: $formattedDate",
             style = MaterialTheme.typography.bodyMedium
         )
-        Spacer(modifier = Modifier.weight(1f)) // Original spacer, pushes content up if less than full screen
+        Spacer(modifier = Modifier.weight(1f))
         Text(
             text = "Seller: ${seller?.username ?: "N/A"}",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            text = "Location: ${seller?.address ?: "N/A"}", // Assuming seller has an address field
+            text = "Location: ${seller?.address ?: "N/A"}",
             style = MaterialTheme.typography.bodyMedium
         )
-        Spacer(modifier = Modifier.height(16.dp)) // Original spacer
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }

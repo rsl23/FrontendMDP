@@ -67,6 +67,10 @@ fun UserDashboardScreen(
             navBackStackEntry?.savedStateHandle?.remove<Boolean>("shouldRefreshDashboard")
         }
     }
+    LaunchedEffect(Unit) { // 'Unit' as a key ensures this block runs once when the Composable first enters the Composition
+        Log.d("UserDashboard", "UserDashboardScreen initialized. Loading products initially.")
+        viewModel.loadProducts(forceRefresh = true) // Load products immediately
+    }
 
     // --- Tampilkan Filter Bottom Sheet jika diminta ---
     if (showFilterBottomSheet) {
