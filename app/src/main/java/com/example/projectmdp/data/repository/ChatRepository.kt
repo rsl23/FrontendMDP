@@ -1,5 +1,6 @@
 package com.example.projectmdp.data.repository
 
+import android.util.Log
 import com.example.projectmdp.data.source.dataclass.ChatMessage
 import com.example.projectmdp.data.source.dataclass.ChatPagination
 import com.example.projectmdp.data.source.dataclass.Conversation
@@ -97,7 +98,7 @@ class ChatRepository @Inject constructor(
             val response = RetrofitInstance.Chatapi.getUserConversations()
             if (response.isSuccess()) {
                 response.data?.let { responseData ->
-                    val conversations = responseData.data.conversations.map { it.toConversation() }
+                    val conversations = responseData.conversations.map { it.toConversation() }
                     emit(Result.success(conversations))
                 } ?: emit(Result.failure(Exception("No data received")))
             } else {
@@ -112,19 +113,25 @@ class ChatRepository @Inject constructor(
         try {
             val response = RetrofitInstance.Chatapi.getConversation(userId, page, limit)
             if (response.isSuccess()) {
-                val data = response.data?.data
-                if (data != null) {
+                val data = response.data
+                if (data?.messages != null) {
+                    Log.d("ChatRepository", "Received messages: ${data.messages}")
                     val messages = data.messages.map { it.toChatMessage() }
                     val pagination = data.pagination.toChatPagination()
                     val otherUser = data.otherUser.toChatUser()
                     val chatMessages = ChatMessages(messages, pagination, otherUser)
                     emit(Result.success(chatMessages))
                 } else {
+                    Log.d("ChatRepository", "No messages received")
                     // 🔁 If no conversation data, start a new one with empty message
                     val startResponse = RetrofitInstance.Chatapi.startChat(StartChatRequest(userId, ""))
+                    Log.d("ChatRepository", "Start response: $startResponse")
                     if (startResponse.isSuccess()) {
-                        val startData = startResponse.data?.data
+                        Log.d("ChatRepository", "Starting new chat")
+                        val startData = startResponse.data
+                        Log.d("ChatRepository", "Start data: $startData")
                         if (startData != null) {
+                            Log.d("ChatRepository", "Starting new chat with ID: ${startData.chat_id}")
                             val chatMessage = ChatMessage(
                                 id = startData.chat_id,
                                 user_sender = startData.sender_id,
@@ -144,9 +151,11 @@ class ChatRepository @Inject constructor(
                             )
                             emit(Result.success(chatMessages))
                         } else {
-                            emit(Result.failure(Exception("Failed to start new chat.")))
+                            val message = startResponse.error ?: "Unknown error occurred"
+                            emit(Result.failure(Exception(message)))
                         }
                     } else {
+                        Log.e("ChatRepository", "Failed to start new chat: ${startResponse.error}")
                         emit(Result.failure(Exception(startResponse.error ?: "Failed to create chat.")))
                     }
                 }
@@ -166,13 +175,13 @@ class ChatRepository @Inject constructor(
             if (response.isSuccess()) {
                 response.data?.let { responseData ->
                     val chatMessage = ChatMessage(
-                        id = responseData.data.chat_id,
-                        user_sender = responseData.data.sender_id,
-                        user_receiver = responseData.data.receiver_id,
-                        chat = responseData.data.message,
-                        datetime = responseData.data.datetime,
-                        status = responseData.data.status,
-                        created_at = responseData.data.datetime,
+                        id = responseData.chat_id,
+                        user_sender = responseData.sender_id,
+                        user_receiver = responseData.receiver_id,
+                        chat = responseData.message,
+                        datetime = responseData.datetime,
+                        status = responseData.status,
+                        created_at = responseData.datetime,
                         updated_at = null,
                         deleted_at = null
                     )

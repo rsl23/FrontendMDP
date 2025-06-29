@@ -40,7 +40,7 @@ data class ChatPagination(
 // Request DTOs
 data class StartChatRequest(
     val receiver_id: String,
-    val message: String
+    val message: String?
 )
 
 data class UpdateMessageStatusRequest(

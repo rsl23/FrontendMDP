@@ -10,6 +10,7 @@ import com.example.projectmdp.data.source.dataclass.ChatMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -44,18 +45,27 @@ class ChatViewModel @Inject constructor(
     fun loadConversation(receiverId: String, page: Int = 1, limit: Int = 50) {
         isLoading = true
         errorMessage = null
+        Log.d("ChatViewModel", "Loading conversation with receiverId=$receiverId, page=$page, limit=$limit")
 
         viewModelScope.launch {
             chatRepository.getConversation(receiverId, page, limit).collectLatest { result ->
                 isLoading = false
                 result.onSuccess { chatMessages ->
+                    Log.d("ChatViewModel", "Received ${chatMessages.messages.size} messages")
                     messages.clear()
                     messages.addAll(chatMessages.messages)
                     otherUserName = chatMessages.otherUser?.username ?: "Unknown"
                     paginationInfo = chatMessages
-                }.onFailure {
-                    errorMessage = it.localizedMessage ?: "Failed to load conversation"
-                    Log.e("ChatViewModel", "Error loading conversation", it)
+                }.onFailure { error ->
+                    errorMessage = when (error) {
+                        is HttpException -> {
+                            val errorBody = error.response()?.errorBody()?.string()
+                            Log.e("ChatViewModel", "HTTP error body: $errorBody")
+                            "Server error: ${error.code()} ${error.message()}"
+                        }
+                        else -> error.localizedMessage ?: "Unknown error"
+                    }
+                    Log.e("ChatViewModel", "Error loading conversation", error)
                 }
             }
         }
