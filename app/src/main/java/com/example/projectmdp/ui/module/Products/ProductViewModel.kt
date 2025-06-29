@@ -60,6 +60,7 @@ class ProductViewModel @Inject constructor(
             fetchProductById(productId)
         }
         _currentLoggedInUserId.value = sessionManager.getUserId()
+        Log.d("ProductViewModel", "Current Logged In User ID: ${_currentLoggedInUserId.value}")
     }
 
     fun setSelectedProduct(product: Product?) { // Changed to nullable to allow clearing

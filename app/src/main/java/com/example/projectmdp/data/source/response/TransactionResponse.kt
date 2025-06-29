@@ -35,7 +35,7 @@ data class UserSeller(
 )
 
 data class ProductInfo(
-    @SerializedName("product_id")
+    @SerializedName("id")
     val product_id: String?,
     val name: String?,
     val description: String?,

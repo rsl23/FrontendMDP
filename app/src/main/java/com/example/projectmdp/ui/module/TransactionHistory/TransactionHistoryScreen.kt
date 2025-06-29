@@ -1,5 +1,6 @@
 package com.example.projectmdp.ui.module.TransactionHistory
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,18 +8,26 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.projectmdp.R
+import com.example.projectmdp.data.source.dataclass.Transaction
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -33,50 +42,71 @@ fun TransactionHistoryScreen(
     val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("id", "ID")) }
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        // Top App Bar
-        TopAppBar(
-            title = {
-                Text(
-                    text = "Transaction History",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
-        )
+    // Clear error when screen is opened
+    LaunchedEffect(Unit) {
+        viewModel.clearError()
+    }
 
-        // Content
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Transaction History", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { viewModel.refreshTransactions() },
+                        enabled = !uiState.isLoading
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier
+            .padding(innerPadding)
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)) {
+
+            when {
+                uiState.isLoading && uiState.transactions.isEmpty() -> {
                     CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-            }
-            uiState.transactions.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+
+                uiState.errorMessage != null && uiState.transactions.isEmpty() -> {
                     Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = uiState.errorMessage ?: "Unknown error",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Button(
+                            onClick = { viewModel.refreshTransactions() }
+                        ) {
+                            Text("Retry")
+                        }
+                    }
+                }
+
+                uiState.transactions.isEmpty() -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
@@ -85,44 +115,60 @@ fun TransactionHistoryScreen(
                             modifier = Modifier.size(64.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("No transactions yet", style = MaterialTheme.typography.titleMedium)
                         Text(
-                            text = "No transactions yet",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Your purchase history will appear here",
+                            "Your purchase history will appear here",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Button(
+                            onClick = { viewModel.refreshTransactions() }
+                        ) {
+                            Text("Refresh")
+                        }
                     }
                 }
-            }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(vertical = 16.dp)
-                ) {
-                    items(uiState.transactions) { transaction ->
-                        TransactionCard(
-                            transaction = transaction,
-                            currencyFormat = currencyFormat,
-                            dateFormat = dateFormat
-                        )
-                    }
-                }
-            }
-        }
-    }
 
-    // Handle error messages
-    uiState.errorMessage?.let { message ->
-        LaunchedEffect(message) {
-            // You can show a snackbar or toast here
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(vertical = 16.dp)
+                    ) {
+                        // Show loading indicator at top when refreshing
+                        if (uiState.isLoading) {
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Refreshing...",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                        
+                        items(uiState.transactions) { transaction ->
+                            TransactionCard(transaction, currencyFormat, dateFormat)
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -133,20 +179,15 @@ private fun TransactionCard(
     currencyFormat: NumberFormat,
     dateFormat: SimpleDateFormat
 ) {
+    val context = LocalContext.current
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Transaction Header
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -154,7 +195,7 @@ private fun TransactionCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = transaction.productName,
+                        text = transaction.product.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 2,
@@ -162,84 +203,106 @@ private fun TransactionCard(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Transaction ID: ${transaction.transactionId}",
+                        text = "ID: ${transaction.transaction_id.take(8)}...",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                TransactionStatusChip(status = transaction.status)
+                TransactionStatusChip(transaction.payment_status)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Transaction Details
+            // Product image and details
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(transaction.product.image)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = transaction.product.name,
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            RoundedCornerShape(8.dp)
+                        ),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = R.drawable.alert_error),
+                    placeholder = painterResource(id = R.drawable.landscape_placeholder)
+                )
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Quantity: ${transaction.quantity}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Seller: ${transaction.seller.username}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
+                    Text("Total Amount", style = MaterialTheme.typography.bodySmall)
                     Text(
-                        text = "Amount",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = currencyFormat.format(transaction.amount),
+                        text = currencyFormat.format(transaction.total_price),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "Date",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = dateFormat.format(Date(transaction.timestamp)),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
+                    Text("Date", style = MaterialTheme.typography.bodySmall)
 
-            // Seller Information
-            if (transaction.sellerName.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Seller: ${transaction.sellerName}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                        val date = Date(transaction.datetime.toLongOrNull() ?: 0L)
+                        Text(
+                            text = dateFormat.format(date),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                }
             }
         }
     }
 }
 
 @Composable
-private fun TransactionStatusChip(status: TransactionStatus) {
-    val (backgroundColor, textColor, statusText) = when (status) {
-        TransactionStatus.PENDING -> Triple(
+private fun TransactionStatusChip(status: String?) {
+    val (backgroundColor, textColor, statusText) = when (status?.lowercase()) {
+        "pending" -> Triple(
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.colorScheme.onTertiaryContainer,
             "Pending"
         )
-        TransactionStatus.COMPLETED -> Triple(
+        "completed", "settlement", "capture", "success" -> Triple(
             Color(0xFF4CAF50).copy(alpha = 0.1f),
             Color(0xFF4CAF50),
             "Completed"
         )
-        TransactionStatus.CANCELLED -> Triple(
+        "cancelled", "cancel", "deny", "expire", "failure", "failed" -> Triple(
             MaterialTheme.colorScheme.errorContainer,
             MaterialTheme.colorScheme.onErrorContainer,
-            "Cancelled"
+            "Failed"
         )
-        TransactionStatus.PROCESSING -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            "Processing"
+        else -> Triple(
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            status ?: "Unknown"
         )
     }
 

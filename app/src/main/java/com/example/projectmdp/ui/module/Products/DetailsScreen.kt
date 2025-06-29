@@ -40,6 +40,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
+import com.example.projectmdp.navigation.Routes
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,7 +86,7 @@ fun DetailsScreen(
                 title = { Text(product?.name ?: "Loading Product...") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -153,7 +155,14 @@ fun DetailsScreen(
                     } else {
                         Button(
                             onClick = {
-                                navController.navigate("TRANSACTION")
+                                product?.let {
+                                    navController.navigate(
+                                        Routes.midtransRoute(
+                                            productId = it.product_id,
+                                            price = it.price
+                                        )
+                                    )
+                                }
                             },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
@@ -169,34 +178,37 @@ fun DetailsScreen(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text("Buy Now", fontSize = 16.sp)
-                        }}
+                        }
 
-                    OutlinedButton(
-                        onClick = {
-                            val sellerId = seller?.id
-                            if (sellerId != null) {
-                               navController.navigate("chat/$sellerId")
-                            } else {
-                                Toast.makeText(context, "Seller information not available for chat.", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier.weight(1f), // Take equal weight
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                        contentPadding = PaddingValues(vertical = 12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Email,
-                            contentDescription = "Chat",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text("Chat", fontSize = 16.sp)
+                        OutlinedButton(
+                            onClick = {
+                                val sellerId = seller?.id
+                                if (sellerId != null) {
+                                    navController.navigate("chat/$sellerId")
+                                } else {
+                                    Toast.makeText(context, "Seller information not available for chat.", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.weight(1f), // Take equal weight
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary,
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = "Chat",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Chat", fontSize = 16.sp)
+                        }
                     }
+
+
                 }
             }
         }

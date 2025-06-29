@@ -110,6 +110,7 @@ class LoginViewModel @Inject constructor(
                                     if (userRole?.equals("user", ignoreCase = true) == true || userRole?.equals("buyer", ignoreCase = true) == true) {
                                         response.data?.user?.id?.let { userId ->
                                             sessionManager.saveUserId(userId)
+                                            Log.d("Login", "User ID saved: $userId")
                                         }
                                         _navigationEvent.emit(Routes.USER_DASHBOARD)
                                     } else {
@@ -227,6 +228,10 @@ class LoginViewModel @Inject constructor(
                                         // Check user role and navigate accordingly
                                         val userRole = response.data?.user?.role
                                         if (userRole?.equals("user", ignoreCase = true) == true || userRole?.equals("buyer", ignoreCase = true) == true) {
+                                            response.data?.user?.id?.let { userId ->
+                                                sessionManager.saveUserId(userId)
+                                                Log.d("Login", "User ID saved: $userId")
+                                            }
                                             _navigationEvent.emit(Routes.USER_DASHBOARD)
                                         } else {
                                             // For other roles, you can add navigation to their respective screens

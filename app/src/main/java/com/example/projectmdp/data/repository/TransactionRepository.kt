@@ -232,34 +232,51 @@ class TransactionRepository @Inject constructor(
     // Get My Transactions (Cache-First + Remote Sync)
     suspend fun getMyTransactions(forceRefresh: Boolean = false): Flow<Result<List<Transaction>>> = flow {
         try {
+            android.util.Log.d("TransactionRepository", "getMyTransactions called, forceRefresh: $forceRefresh")
+            
             // Emit cached data first for better UX
             if (!forceRefresh) {
                 val cachedTransactions = buildTransactionsFromCache()
+                android.util.Log.d("TransactionRepository", "Found ${cachedTransactions.size} cached transactions")
                 if (cachedTransactions.isNotEmpty()) {
                     emit(Result.success(cachedTransactions))
                 }
             }
 
             // Fetch from remote
+            android.util.Log.d("TransactionRepository", "Fetching transactions from remote API")
             val response = RetrofitInstance.Transactionapi.getMyTransactions()
+            android.util.Log.d("TransactionRepository", "API response success: ${response.isSuccess()}")
+            
             if (response.isSuccess()) {
                 response.data?.let { responseData ->
-                    val transactions = responseData.transactions.map { it.toTransaction() }
+                    android.util.Log.d("TransactionRepository", "Received ${responseData.transactions.size} transactions from API")
+                    val transactions = responseData.transactions.map { apiTransaction ->
+                        android.util.Log.d("TransactionRepository", "Mapping transaction: ${apiTransaction.transaction_id}")
+                        apiTransaction.toTransaction()
+                    }
                     
                     // Cache to local database
                     val transactionEntities = responseData.transactions.map { it.toTransactionEntity() }
                     transactionDao.deleteAllTransactions() // Clear old cache
                     transactionDao.insertTransactions(transactionEntities)
+                    android.util.Log.d("TransactionRepository", "Cached ${transactionEntities.size} transactions to local DB")
                     
                     // Cache related data
                     responseData.transactions.forEach { cacheRelatedData(it) }
                     
+                    android.util.Log.d("TransactionRepository", "Emitting ${transactions.size} transactions")
                     emit(Result.success(transactions))
-                } ?: emit(Result.failure(Exception("No transactions received")))
+                } ?: run {
+                    android.util.Log.e("TransactionRepository", "API response data is null")
+                    emit(Result.failure(Exception("No transactions received")))
+                }
             } else {
+                android.util.Log.e("TransactionRepository", "API error: ${response.error}")
                 // Return cached data if remote fails
                 val cachedTransactions = buildTransactionsFromCache()
                 if (cachedTransactions.isNotEmpty()) {
+                    android.util.Log.d("TransactionRepository", "Using cached transactions due to API error")
                     if (!forceRefresh) {
                         // Already emitted above
                     } else {
@@ -270,15 +287,18 @@ class TransactionRepository @Inject constructor(
                 }
             }
         } catch (e: Exception) {
+            android.util.Log.e("TransactionRepository", "Exception in getMyTransactions", e)
             // Fallback to cached data
             try {
                 val cachedTransactions = buildTransactionsFromCache()
                 if (cachedTransactions.isNotEmpty()) {
+                    android.util.Log.d("TransactionRepository", "Using cached transactions due to exception")
                     emit(Result.success(cachedTransactions))
                 } else {
                     emit(Result.failure(e))
                 }
             } catch (cacheError: Exception) {
+                android.util.Log.e("TransactionRepository", "Cache error", cacheError)
                 emit(Result.failure(e))
             }
         }
