@@ -1,16 +1,16 @@
 package com.example.projectmdp.ui.module.chat
 
-import android.util.Log
+import android.util.Log // Add this import for Log.d/e
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectmdp.data.repository.ChatRepository
-import com.example.projectmdp.data.source.dataclass.Conversation
-import com.example.projectmdp.data.source.dataclass.User // You might not need this if Conversation already has User
+import com.example.projectmdp.data.source.dataclass.Conversation // Make sure this import is present and correct
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 @HiltViewModel
 class ChatListViewModel @Inject constructor(
     private val chatRepository: ChatRepository
@@ -23,15 +23,16 @@ class ChatListViewModel @Inject constructor(
     val isLoading: StateFlow<Boolean> = _isLoading
 
     var errorMessage: String? = null
+
     init {
         loadConversations()
     }
+
     fun loadConversations() {
         _isLoading.value = true
         viewModelScope.launch {
-            Log.d("ChatListViewModel", "Loading conversations...")
-            chatRepository.getUserConversations().collect { result ->
-                result.onSuccess { list ->
+            chatRepository.getUserConversations().collect { result: Result<List<com.example.projectmdp.data.source.dataclass.Conversation>> -> // Explicitly typed
+                result.onSuccess { list: List<Conversation> -> // Explicitly typed
                     Log.d("ChatListViewModel", "Received conversations: $list")
                     val items = list.map { conversation ->
                         ConversationItem(
@@ -41,16 +42,15 @@ class ChatListViewModel @Inject constructor(
                                 name = conversation.otherUser?.username ?: "Unknown",
                                 profilePicture = conversation.otherUser?.profile_picture
                             ),
-                            lastMessage = conversation.lastMessage ?: "",
-                            lastMessageTime = conversation.lastMessageTime ?: "",
-                            unreadCount = 0 // Replace with real unread count if available
+                            lastMessage = conversation.lastMessage,
+                            lastMessageTime = conversation.lastMessageTime,
+                            unreadCount = 0
                         )
                     }
-                    Log.d("ChatListViewModel", "Mapped conversations: $items")
                     _conversations.value = items
                 }.onFailure {
                     errorMessage = it.localizedMessage ?: "Failed to load conversations"
-                    Log.e("ChatListViewModel", "Error loading conversations: ${it.localizedMessage}")
+                    Log.e("ChatListViewModel", "Error loading conversations: $errorMessage")
                 }
                 _isLoading.value = false
             }
