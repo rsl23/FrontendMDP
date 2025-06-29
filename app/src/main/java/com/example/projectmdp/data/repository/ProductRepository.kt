@@ -342,8 +342,14 @@ class ProductRepository @Inject constructor(
         }
     }
 
-    suspend fun getProductsByCategory(category: String): List<Product> {
-        return productDao.getProductsByCategory(category).map { Product.fromProductEntity(it) }
+    fun getProductsByCategory(category: String): Flow<Result<List<Product>>> = flow {
+        try {
+            val entities = productDao.getProductsByCategory(category)
+            val products = entities.map(Product::fromProductEntity)
+            emit(Result.success(products)) // Mengirim data ke dalam Flow
+        } catch (e: Exception) {
+            emit(Result.failure(e)) // Mengirim error ke dalam Flow
+        }
     }
 
     suspend fun getProductsByUser(userId: String): List<Product> {
