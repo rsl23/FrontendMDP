@@ -15,7 +15,6 @@ import com.example.projectmdp.ui.module.Products.DetailsScreen
 import com.example.projectmdp.ui.module.login.LoginScreen
 import com.example.projectmdp.ui.module.register.RegisterScreen
 import com.example.projectmdp.ui.module.UserDashboard.UserDashboardScreen
-import com.example.projectmdp.ui.module.chat.ChatListScreen
 import com.example.projectmdp.ui.module.chat.ChatScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -66,12 +65,6 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         }
         composable(route = Routes.ADD_PRODUCT) {
             CreateProductScreen(
-                viewModel = hiltViewModel(),
-                navController = navController
-            )
-        }
-        composable(route = Routes.CHAT_LIST) {
-            ChatListScreen(
                 viewModel = hiltViewModel(),
                 navController = navController
             )

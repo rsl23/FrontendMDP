@@ -66,10 +66,10 @@ data class StartChatData(
 
 
 data class GetUserConversationsResponse(
-    val conversations: List<Conversation>? = null, // Assuming you want to use the Conversation data class you defined in this file
-    val total: Int? = null
+    val status: String,
+    val message: String,
+    val data: GetUserConversationsData
 )
-
 
 data class GetUserConversationsData(
     val conversations: List<Conversation>,

@@ -97,23 +97,12 @@ class ChatRepository @Inject constructor(
         try {
             val response = RetrofitInstance.Chatapi.getUserConversations()
             if (response.isSuccess()) {
-                // response.data here refers to the GetUserConversationsResponse object
-                response.data?.let { getUserConversationsResponse ->
-                    // getUserConversationsResponse.data here refers to the GetUserConversationsData object
-                    getUserConversationsResponse.data?.let { getUserConversationsData ->
-                        // Now safely access conversations from GetUserConversationsData
-                        val conversations = getUserConversationsData.conversations.map { it.toConversation() }
-                        emit(Result.success(conversations))
-                    } ?: run {
-                        // Case where GetUserConversationsData (the inner 'data') is null
-                        emit(Result.failure(Exception("API response data (GetUserConversationsData) is null.")))
-                    }
-                } ?: run {
-                    // Case where GetUserConversationsResponse (the outer 'data' in ApiResponse) is null
-                    emit(Result.failure(Exception("API response data (GetUserConversationsResponse) is null.")))
-                }
+                response.data?.let { responseData ->
+                    val conversations = responseData.conversations.map { it.toConversation() }
+                    emit(Result.success(conversations))
+                } ?: emit(Result.failure(Exception("No data received")))
             } else {
-                emit(Result.failure(Exception(response.error ?: "Unknown error from API.")))
+                emit(Result.failure(Exception(response.error ?: "Unknown error")))
             }
         } catch (e: Exception) {
             emit(Result.failure(e))
