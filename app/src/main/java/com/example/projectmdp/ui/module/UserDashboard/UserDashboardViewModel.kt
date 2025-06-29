@@ -5,7 +5,9 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectmdp.data.repository.ProductRepository
+import com.example.projectmdp.data.repository.ProductWithPagination // Pastikan import ini ada
 import com.example.projectmdp.data.source.dataclass.Product
+import com.example.projectmdp.data.source.local.SessionManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -14,9 +16,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 open class UserDashboardViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
+    // --- State untuk UI yang diamati oleh Compose ---
     var searchQuery by mutableStateOf("")
         private set
     var products by mutableStateOf<List<Product>>(emptyList())
@@ -25,7 +29,7 @@ open class UserDashboardViewModel @Inject constructor(
         private set
     var userInitials by mutableStateOf("U")
         private set
-    var selectedCategory by mutableStateOf<String?>(null)
+    var selectedCategory by mutableStateOf<String?>("All Categories")
         private set
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -35,31 +39,30 @@ open class UserDashboardViewModel @Inject constructor(
         loadProducts(forceRefresh = true)
     }
 
+    /**
+     * Memperbarui query pencarian. Jika query kosong, muat ulang produk sesuai filter terakhir.
+     */
     fun onSearchQueryChange(query: String) {
         searchQuery = query
         Log.d("UserDashboardViewModel", "Query changed: $query")
-        if (query.isEmpty()) {
-            // Jika query kosong, muat semua produk atau produk yang terakhir difilter
-            if (selectedCategory != null && selectedCategory != "All Categories") {
-                filterProductsByCategory(selectedCategory!!)
-            } else {
-                loadProducts(forceRefresh = true)
-            }
+        if (query.isBlank()) {
+            // Jika search bar dikosongkan, muat ulang berdasarkan kategori yang terakhir dipilih
+            val lastCategory = selectedCategory ?: "All Categories"
+            filterProductsByCategory(lastCategory)
         } else {
             searchProducts()
         }
     }
 
+    /**
+     * Menjalankan pencarian produk berdasarkan searchQuery.
+     */
     fun searchProducts() {
         if (searchQuery.isBlank()) {
             loadProducts(forceRefresh = true)
             return
         }
         Log.d("UserDashboardViewModel", "Searching for products with query: $searchQuery")
-        searchProductsWithRepository()
-    }
-
-    private fun searchProductsWithRepository() {
         viewModelScope.launch {
             isLoading = true
             try {
@@ -84,16 +87,21 @@ open class UserDashboardViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Memuat semua produk dari repository dan mereset filter.
+     */
     fun loadProducts(forceRefresh: Boolean = false) {
         Log.d("UserDashboardViewModel", "Loading all products (forceRefresh: $forceRefresh)")
-        selectedCategory = "All Categories" // Set kategori saat memuat semua
+        selectedCategory = "All Categories"
         loadProductsWithRepository(forceRefresh)
     }
 
-    // --- INI FUNGSI YANG PERLU ANDA TAMBAHKAN ATAU PASTIKAN ADA ---
+    /**
+     * FUNGSI BARU: Memfilter produk berdasarkan kategori yang dipilih.
+     */
     fun filterProductsByCategory(category: String) {
-        selectedCategory = category // Simpan kategori yang dipilih
-        searchQuery = "" // Hapus query pencarian untuk menghindari konflik
+        selectedCategory = category
+        searchQuery = "" // Hapus query pencarian
 
         if (category == "All Categories") {
             loadProducts(forceRefresh = true)
@@ -107,7 +115,7 @@ open class UserDashboardViewModel @Inject constructor(
                 // Panggil repository untuk mendapatkan produk berdasarkan kategori
                 productRepository.getProductsByCategory(category).collectLatest { result ->
                     result.fold(
-                        onSuccess = { filteredProducts: List<Product> ->
+                        onSuccess = { filteredProducts ->
                             products = filteredProducts
                             Log.d("UserDashboardViewModel", "Filter completed: ${filteredProducts.size} products found for '$category'")
                         },
@@ -126,20 +134,17 @@ open class UserDashboardViewModel @Inject constructor(
         }
     }
 
-
     private fun loadProductsWithRepository(forceRefresh: Boolean) {
         viewModelScope.launch {
             isLoading = true
             try {
                 productRepository.getAllProducts(forceRefresh = forceRefresh).collectLatest { result ->
                     result.fold(
-                        onSuccess = { productWithPagination -> // Kita beri nama yang jelas: ini adalah ProductWithPagination
-                            // --- PERBAIKAN DI SINI ---
-                            // Ambil daftar produk DARI DALAM objek productWithPagination
+                        onSuccess = { productWithPagination ->
                             products = productWithPagination.products
-                            Log.d("UserDashboardViewModel", "All products loaded: ${productWithPagination.products.size}")
+                            Log.d("UserDashboardViewModel", "Products loaded: ${productWithPagination.products.size}")
                         },
-                        onFailure = { error: Throwable ->
+                        onFailure = { error ->
                             Log.e("UserDashboardViewModel", "Failed to load products: ${error.message}", error)
                             products = emptyList()
                         }
@@ -177,9 +182,23 @@ open class UserDashboardViewModel @Inject constructor(
 
     fun buyProduct(product: Product) {
         Log.d("UserDashboardViewModel", "Buy product: ${product.name}")
+        // TODO: Implement buy logic
     }
 
     fun chatWithSeller(sellerId: String) {
         Log.d("UserDashboardViewModel", "Chat with seller: $sellerId")
+        // TODO: Implement chat logic
+    }
+
+    fun logout() {
+        Log.d("UserDashboardViewModel", "Logging out user")
+        auth.signOut()
+        sessionManager.clearToken()
+
+        // Hapus data yang di-cache di ViewModel untuk memastikan UI bersih
+        products = emptyList()
+        searchQuery = ""
+        userInitials = "U"
+        selectedCategory = "All Categories"
     }
 }
