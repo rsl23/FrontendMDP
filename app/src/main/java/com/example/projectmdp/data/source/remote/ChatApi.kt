@@ -5,8 +5,7 @@ import com.example.projectmdp.data.source.response.DeleteMessageData
 import com.example.projectmdp.data.source.response.DeleteMessageResponse
 import com.example.projectmdp.data.source.response.GetConversationData
 import com.example.projectmdp.data.source.response.GetConversationResponse
-import com.example.projectmdp.data.source.response.GetUserConversationsData
-import com.example.projectmdp.data.source.response.GetUserConversationsResponse
+import com.example.projectmdp.data.source.response.GetUserConversationsData // This will be used directly
 import com.example.projectmdp.data.source.response.StartChatData
 import com.example.projectmdp.data.source.response.StartChatRequest
 import com.example.projectmdp.data.source.response.StartChatResponse

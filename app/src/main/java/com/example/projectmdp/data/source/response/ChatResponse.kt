@@ -64,13 +64,6 @@ data class StartChatData(
     val receiver: OtherUser?
 )
 
-
-data class GetUserConversationsResponse(
-    val status: String,
-    val message: String,
-    val data: GetUserConversationsData
-)
-
 data class GetUserConversationsData(
     val conversations: List<Conversation>,
     val total: Int
