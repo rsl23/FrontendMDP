@@ -56,6 +56,10 @@ class LoginViewModel @Inject constructor(
         _errorMessage.value = null
     }
 
+    fun deleteAutoLogin(){
+        sessionManager.clearToken()
+    }
+
     fun checkAutoLogin() {
         val savedToken = sessionManager.getToken()
         if (!savedToken.isNullOrBlank()) {
