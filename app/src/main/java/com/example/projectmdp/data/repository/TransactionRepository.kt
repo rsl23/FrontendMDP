@@ -141,11 +141,11 @@ class TransactionRepository @Inject constructor(
     // Create Transaction (Remote + Local Cache)
     suspend fun createTransaction(
         productId: String,
-        paymentId: String,
-        paymentDescription: String = ""
+        quantity: Int,
+        total_price: Double
     ): Flow<Result<CreateTransactionResult>> = flow {
         try {
-            val request = CreateTransactionRequest(productId, paymentId, paymentDescription)
+            val request = CreateTransactionRequest(productId, quantity, total_price)
             val response = RetrofitInstance.Transactionapi.createTransaction(request)
             
             if (response.isSuccess()) {

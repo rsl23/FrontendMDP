@@ -23,15 +23,15 @@ class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
     var email by mutableStateOf("")
-//        private set
+    //        private set
     var password by mutableStateOf("")
-//        private set
+    //        private set
     var confirmPassword by mutableStateOf("")
-//        private set
+    //        private set
     var address by mutableStateOf("")
-//        private set
+    //        private set
     var phoneNumber by mutableStateOf("")
-//        private set
+    //        private set
     var isLoading by mutableStateOf(false)
 //        private set
 

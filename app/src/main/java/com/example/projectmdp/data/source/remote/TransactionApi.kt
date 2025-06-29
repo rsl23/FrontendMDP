@@ -40,6 +40,6 @@ data class UpdateTransactionStatusRequest(
 )
 data class CreateTransactionRequest(
     val product_id: String,
-    val payment_id: String,
-    val payment_description: String = ""
+    val quantity: Int,
+    val total_price: Double,
 )
