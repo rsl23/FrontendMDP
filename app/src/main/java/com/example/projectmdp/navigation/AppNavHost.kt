@@ -66,5 +66,17 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 navController = navController
             )
         }
+        composable(route = Routes.EDIT_PROFILE) {
+            com.example.projectmdp.ui.module.EditProfile.EditProfileScreen(
+                viewModel = hiltViewModel(),
+                navController = navController
+            )
+        }
+        composable(route = Routes.TRANSACTION_HISTORY) {
+            com.example.projectmdp.ui.module.TransactionHistory.TransactionHistoryScreen(
+                viewModel = hiltViewModel(),
+                navController = navController
+            )
+        }
     }
 }
