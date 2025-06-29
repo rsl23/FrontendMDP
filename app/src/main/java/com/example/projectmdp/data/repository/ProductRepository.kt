@@ -197,20 +197,21 @@ class ProductRepository @Inject constructor(
     }
 
     fun updateProduct(
-        context: Context, // Diperlukan untuk URI processing
-        id: String,
-        name: String?,
-        description: String?,
-        price: Double?,
-        category: String?,
+        context: Context, // Menerima Context
+        productId: String,
+        name: String, // Menggunakan non-nullable untuk konsistensi
+        description: String,
+        price: Double, // Menerima Double
+        category: String,
         imageUri: Uri?
     ): Flow<Result<Product>> = flow {
         var tempFile: File? = null
         try {
-            val nameBody = name?.toRequestBody("text/plain".toMediaTypeOrNull())
-            val descriptionBody = description?.toRequestBody("text/plain".toMediaTypeOrNull())
-            val priceBody = price?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull())
-            val categoryBody = category?.toRequestBody("text/plain".toMediaTypeOrNull())
+            // Konversi ke RequestBody di dalam repository
+            val nameBody = name.toRequestBody("text/plain".toMediaTypeOrNull())
+            val descriptionBody = description.toRequestBody("text/plain".toMediaTypeOrNull())
+            val priceBody = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val categoryBody = category.toRequestBody("text/plain".toMediaTypeOrNull())
 
             val imagePart = imageUri?.let { uri ->
                 tempFile = createTempFileFromUri(context, uri)
@@ -221,21 +222,30 @@ class ProductRepository @Inject constructor(
                 }
             }
 
-            val response = RetrofitInstance.Productapi.updateProduct(id, nameBody, descriptionBody, priceBody, categoryBody, imagePart)
+            // Memanggil API dengan parameter yang sudah di-format
+            val response = RetrofitInstance.Productapi.updateProduct(
+                id = productId, // Pastikan nama parameter di API cocok
+                name = nameBody,
+                description = descriptionBody,
+                price = priceBody,
+                category = categoryBody,
+                image = imagePart
+            )
 
             if (response.isSuccess()) {
                 response.data?.let { responseData ->
                     val product = responseData.product.toProduct()
-                    productDao.update(product.toProductEntity())
+                    productDao.update(product.toProductEntity()) // Update cache lokal
                     emit(Result.success(product))
-                } ?: emit(Result.failure(Exception("Failed to update product")))
+                } ?: emit(Result.failure(Exception("Failed to update product: No data received.")))
             } else {
-                emit(Result.failure(Exception(response.error ?: "Failed to update product")))
+                emit(Result.failure(Exception(response.error ?: "Failed to update product.")))
             }
         } catch (e: Exception) {
+            Log.e("ProductRepository", "Error updating product: ${e.message}", e)
             emit(Result.failure(e))
         } finally {
-            tempFile?.delete()
+            tempFile?.delete() // Selalu hapus file sementara
         }
     }
 
