@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import com.example.projectmdp.navigation.Routes
 import androidx.navigation.compose.currentBackStackEntryAsState
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -301,21 +302,18 @@ private fun ProductDetailsContent(product: Product, seller: User?, currencyForma
         Spacer(modifier = Modifier.height(16.dp))
 
         // Handle date formatting
-        val formattedDate = remember(product.created_at) {
-            try {
-                // Assuming product.created_at is in a format like "yyyy-MM-dd'T'HH:mm:ss'Z'" (ISO 8601 UTC)
-                // Adjust this SimpleDateFormat pattern to match your backend's string exactly
-                val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-                parser.timeZone = java.util.TimeZone.getTimeZone("UTC") // Set UTC timezone for parsing
-                val date = parser.parse(product.created_at)
-                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date) // Format for display
-            } catch (e: Exception) {
-                e.printStackTrace()
-                product.created_at // Fallback to raw string if parsing fails
+        val isoDateFormat = remember {
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
             }
         }
+        val date = try {
+            isoDateFormat.parse(product.created_at)
+        } catch (e: Exception) {
+            null
+        }
         Text(
-            text = "Created At: $formattedDate",
+            text = "Created At: $date",
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.weight(1f)) // Original spacer, pushes content up if less than full screen

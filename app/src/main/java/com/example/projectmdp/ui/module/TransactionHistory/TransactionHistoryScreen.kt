@@ -266,14 +266,24 @@ private fun TransactionCard(
                     )
                 }
 
+                val isoDateFormat = remember {
+                    SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }
+                }
+
                 Column(horizontalAlignment = Alignment.End) {
                     Text("Date", style = MaterialTheme.typography.bodySmall)
 
-                        val date = Date(transaction.datetime.toLongOrNull() ?: 0L)
-                        Text(
-                            text = dateFormat.format(date),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                    val date = try {
+                        isoDateFormat.parse(transaction.datetime)
+                    } catch (e: Exception) {
+                        null
+                    }
+                    Text(
+                        text = date?.let { dateFormat.format(it) } ?: "-",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
 
                 }
             }
