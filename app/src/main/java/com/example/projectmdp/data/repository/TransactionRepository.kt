@@ -81,8 +81,8 @@ fun com.example.projectmdp.data.source.response.Transaction.toTransaction(): Tra
             created_at = "",
             deleted_at = null
         ),
-        quantity = this.quantity,
-        total_price = this.total_price,
+        quantity = this.quantity ?: 1,
+        total_price = this.product!!.price!!,
         datetime = this.datetime,
         payment_id = this.payment_id,
         payment_status = this.payment_status,

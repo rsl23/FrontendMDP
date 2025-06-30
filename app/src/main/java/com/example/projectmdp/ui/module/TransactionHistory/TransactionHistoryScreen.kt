@@ -238,12 +238,12 @@ private fun TransactionCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Quantity: ${transaction.quantity}",
+                        text = "Quantity: 1",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Seller: ${transaction.seller.username}",
+                        text = "Seller: ${transaction.seller.email}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
