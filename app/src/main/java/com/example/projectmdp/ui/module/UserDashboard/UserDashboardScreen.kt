@@ -424,11 +424,11 @@ fun ProfileMenuPopup(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-//                        Icon(
-//                            painter = painterResource(id = R.drawable.person_24px),
-//                            contentDescription = "Edit Profile",
-//                            modifier = Modifier.size(20.dp)
-//                        )
+                        Icon(
+                            painter = painterResource(id = R.drawable.person_24px),
+                            contentDescription = "Edit Profile",
+                            modifier = Modifier.size(20.dp)
+                        )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("Edit Profile")
                     }
@@ -473,11 +473,11 @@ fun ProfileMenuPopup(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-//                        Icon(
-//                            painter = painterResource(id = R.drawable.logout_24px),
-//                            contentDescription = "Logout",
-//                            modifier = Modifier.size(20.dp)
-//                        )
+                        Icon(
+                            painter = painterResource(id = R.drawable.logout_24px),
+                            contentDescription = "Logout",
+                            modifier = Modifier.size(20.dp)
+                        )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("Logout")
                     }

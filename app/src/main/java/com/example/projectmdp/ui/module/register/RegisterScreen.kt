@@ -245,22 +245,22 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedButton(
-                onClick = { viewModel.onGoogleSignInClicked() },
-                enabled = !isLoading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(
-                    "Register with Google",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+//            OutlinedButton(
+//                onClick = { viewModel.onGoogleSignInClicked() },
+//                enabled = !isLoading,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(56.dp),
+//                shape = RoundedCornerShape(12.dp),
+//                colors = ButtonDefaults.outlinedButtonColors(
+//                    contentColor = MaterialTheme.colorScheme.primary
+//                )
+//            ) {
+//                Text(
+//                    "Register with Google",
+//                    style = MaterialTheme.typography.titleMedium
+//                )
+//            }
 
             Row(
                 modifier = Modifier.padding(vertical = 24.dp),

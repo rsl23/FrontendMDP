@@ -35,7 +35,7 @@ object RetrofitInstance {
 //    http://10.0.2.2:3000/
     private val retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:3000/")
+            .baseUrl("https://pouncing-rune-lord.glitch.me")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
