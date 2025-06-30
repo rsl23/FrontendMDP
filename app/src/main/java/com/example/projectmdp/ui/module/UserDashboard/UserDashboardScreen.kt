@@ -10,8 +10,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.ui.res.painterResource
 import com.example.projectmdp.R
 import androidx.compose.material3.*
@@ -163,6 +166,10 @@ fun UserDashboardScreen(
                 onTransactionHistory = {
                     showProfileMenu = false
                     navController.navigate(Routes.TRANSACTION_HISTORY)
+                },
+                onAnalytics = {
+                    showProfileMenu = false
+                    navController.navigate(Routes.ANALYTICS)
                 },
                 onLogout = {
                     showProfileMenu = false
@@ -485,6 +492,7 @@ fun ProfileMenuPopup(
     onDismiss: () -> Unit,
     onEditProfile: () -> Unit,
     onTransactionHistory: () -> Unit,
+    onAnalytics: () -> Unit,
     onLogout: () -> Unit
 ) {
     Box(
