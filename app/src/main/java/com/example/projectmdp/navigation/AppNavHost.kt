@@ -93,6 +93,23 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 navController = navController
             )
         }
+        composable(
+            route = Routes.TRANSACTION_DETAIL,
+            arguments = listOf(navArgument("transactionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val transactionId = backStackEntry.arguments?.getString("transactionId")
+            Log.d("NavigationDebug", "Arrived at TransactionDetailScreen. Received transactionId: $transactionId")
+            if (transactionId != null) {
+                com.example.projectmdp.ui.module.TransactionDetail.TransactionDetailScreen(
+                    transactionId = transactionId,
+                    viewModel = hiltViewModel(),
+                    navController = navController
+                )
+            } else {
+                Text("Error: Transaction ID was null in TransactionDetailScreen.")
+                Log.e("NavigationDebug", "Transaction ID was null for TRANSACTION_DETAIL route.")
+            }
+        }
         composable(route = Routes.CHAT_LIST) {
             ChatListScreen(
                 viewModel = hiltViewModel(),
