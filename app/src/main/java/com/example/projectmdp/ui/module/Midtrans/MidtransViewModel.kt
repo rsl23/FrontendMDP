@@ -101,7 +101,7 @@ class MidtransViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                val totalPrice = product.price * quantity
+                val totalPrice = (product.price).toDouble()
                 Log.d("MidtransViewModel", "Total price calculated: $totalPrice")
                 
                 transactionRepository.createTransaction(

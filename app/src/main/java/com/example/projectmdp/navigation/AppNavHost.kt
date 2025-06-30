@@ -110,6 +110,12 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 Log.e("NavigationDebug", "Transaction ID was null for TRANSACTION_DETAIL route.")
             }
         }
+        composable(route = Routes.ANALYTICS) {
+            com.example.projectmdp.ui.module.Analytics.AnalyticsScreen(
+                viewModel = hiltViewModel(),
+                navController = navController
+            )
+        }
         composable(route = Routes.CHAT_LIST) {
             ChatListScreen(
                 viewModel = hiltViewModel(),

@@ -9,6 +9,7 @@ object Routes {
     const val CHAT = "chat/{otherUserId}"
     const val EDIT_PROFILE = "edit_profile"
     const val TRANSACTION_HISTORY = "transaction_history"
+    const val ANALYTICS = "analytics"
     const val CHAT_LIST = "chat_list"
     const val TRANSACTION = "transaction"
     const val TRANSACTION_DETAIL = "transaction_detail/{transactionId}"

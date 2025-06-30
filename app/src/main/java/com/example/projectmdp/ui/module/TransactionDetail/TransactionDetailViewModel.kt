@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectmdp.data.repository.TransactionRepository
+import com.example.projectmdp.data.repository.UserRepository
 import com.example.projectmdp.data.source.dataclass.Transaction
 import com.example.projectmdp.data.source.dataclass.User
 import com.example.projectmdp.data.source.dataclass.Product
@@ -24,7 +25,8 @@ data class TransactionDetailUiState(
 
 @HiltViewModel
 class TransactionDetailViewModel @Inject constructor(
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(TransactionDetailUiState())
@@ -47,6 +49,13 @@ class TransactionDetailViewModel @Inject constructor(
                             isLoading = false,
                             errorMessage = null
                         )
+                        userRepository.getUserById(transactionDetails.seller!!.id).collect {
+                            _uiState.value = _uiState.value.copy(
+                                seller = it.getOrNull()
+                            )
+                        }
+                        Log.d("TransactionDetailVM", "Transaction: ${_uiState.value.transaction}")
+                        Log.d("TransactionDetailVM", "Transaction User: ${_uiState.value.seller}")
                     }.onFailure { error ->
                         Log.e("TransactionDetailVM", "Error loading transaction detail", error)
                         _uiState.value = _uiState.value.copy(

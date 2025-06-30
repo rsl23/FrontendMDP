@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.res.painterResource
@@ -142,6 +143,10 @@ fun UserDashboardScreen(
                 onTransactionHistory = {
                     showProfileMenu = false
                     navController.navigate(Routes.TRANSACTION_HISTORY)
+                },
+                onAnalytics = {
+                    showProfileMenu = false
+                    navController.navigate(Routes.ANALYTICS)
                 },
                 onLogout = {
                     showProfileMenu = false
@@ -392,6 +397,7 @@ fun ProfileMenuPopup(
     onDismiss: () -> Unit,
     onEditProfile: () -> Unit,
     onTransactionHistory: () -> Unit,
+    onAnalytics: () -> Unit,
     onLogout: () -> Unit
 ) {
     Box(
@@ -453,6 +459,28 @@ fun ProfileMenuPopup(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("Transaction History")
+                    }
+                }
+
+                TextButton(
+                    onClick = onAnalytics,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Analytics,
+                            contentDescription = "Analytics",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Analytics")
                     }
                 }
 
