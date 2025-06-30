@@ -220,7 +220,7 @@ fun CreateProductScreen(
             )
 
             // Product Category
-            val categories = listOf("Games", "Sword", "Vehicle", "Accessories", "Gadget & Technology", "Furniture")
+            val categories = listOf("Games", "Sword", "Vehicle", "Accessories", "Gadget & Technology", "Furniture", "Drone", "Other")
             var expanded by remember { mutableStateOf(false) }
 
             ExposedDropdownMenuBox(

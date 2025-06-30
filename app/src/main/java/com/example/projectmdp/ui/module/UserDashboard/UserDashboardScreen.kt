@@ -384,7 +384,7 @@ fun FilterBottomSheet(
     onClearFilter: () -> Unit
 ) {
     val categories = remember {
-        listOf("All Categories", "Sword", "Gadget & Technology", "Furniture", "Games", "Books", "Other")
+        listOf("All Categories","Games", "Sword", "Vehicle", "Accessories", "Gadget & Technology", "Furniture", "Drone", "Other")
     }
     var selectedCategory by remember { mutableStateOf(categories.first()) }
     var isCategoryDropdownExpanded by remember { mutableStateOf(false) }
