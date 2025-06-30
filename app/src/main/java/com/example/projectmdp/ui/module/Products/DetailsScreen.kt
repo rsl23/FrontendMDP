@@ -313,7 +313,7 @@ private fun ProductDetailsContent(product: Product, seller: User?, currencyForma
             null
         }
         Text(
-            text = "Created At: $date",
+            text = "Listed At: $date",
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.weight(1f)) // Original spacer, pushes content up if less than full screen
